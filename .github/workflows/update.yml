@@ -1,0 +1,75 @@
+name: Update dashboard
+
+on:
+  schedule:
+    # Dienstags 09:00 UTC (11:00 CEST / 10:00 CET) - Destatis aktualisiert
+    # die Sonderauswertung ueblicherweise dienstags.
+    - cron: "0 9 * * 2"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Daten laden
+        run: |
+          python3 scripts/fetch_destatis_annual.py
+          python3 scripts/fetch_eurostat.py
+          python3 scripts/fetch_eurostat_weekly.py
+          python3 scripts/fetch_destatis_weekly.py
+
+      - name: Dashboard bauen
+        run: |
+          python3 scripts/build_data.py
+          python3 scripts/build_monthly_data.py
+          python3 scripts/build_monthly_age_adjusted.py
+          python3 scripts/build_weekly_age_adjusted.py
+          python3 scripts/render_html.py
+
+      - name: index.html committen, falls geaendert
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- index.html; then
+            git add index.html
+            git commit -m "Dashboard automatisch aktualisiert ($(date -u +%Y-%m-%d))"
+            git push
+          else
+            echo "Keine Aenderung an index.html"
+          fi
+
+      - name: Pages-Artefakt vorbereiten
+        run: |
+          mkdir -p public
+          cp index.html public/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

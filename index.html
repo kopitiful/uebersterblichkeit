@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übersterblichkeit Deutschland — 1946–2024</title>
+<style>
+  .viz-root {
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6; /* blue */
+    --series-2:       #1baf7a; /* aqua */
+    --good:           #0ca30c;
+    --critical:       #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #199e70;
+      --good:           #0ca30c;
+      --critical:       #e66767;
+    }
+  }
+  .viz-root {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    padding: 32px 24px 64px;
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+  .viz-root h1 { font-size: 26px; font-weight: 650; margin: 0 0 6px; }
+  .viz-root .lede { color: var(--text-secondary); font-size: 15px; max-width: 720px; line-height: 1.5; margin: 0 0 28px; }
+  .viz-root .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 40px; }
+  .viz-root .stat-tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .viz-root .stat-tile .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .viz-root .stat-tile .value { font-size: 28px; font-weight: 650; line-height: 1.1; }
+  .viz-root .stat-tile .delta { font-size: 13px; margin-top: 4px; font-weight: 550; }
+  .viz-root .stat-tile .delta.up { color: var(--critical); }
+  .viz-root .stat-tile .delta.down { color: var(--good); }
+  .viz-root section.block { margin-bottom: 48px; }
+  .viz-root section.block > h2 { font-size: 19px; font-weight: 650; margin: 0 0 4px; }
+  .viz-root section.block > .block-note { color: var(--text-secondary); font-size: 14px; margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .viz-root .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 780px) { .viz-root .chart-grid { grid-template-columns: 1fr; } }
+  .viz-root .chart-card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 18px 8px;
+  }
+  .viz-root .chart-card.full { grid-column: 1 / -1; }
+  .viz-root .chart-card h3 { font-size: 15px; font-weight: 620; margin: 0 0 2px; }
+  .viz-root .chart-card .source { font-size: 11.5px; color: var(--text-muted); margin: 6px 0 2px; }
+  .viz-root .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin: 4px 0 8px; }
+  .viz-root .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+  .viz-root .legend .swatch { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+  .viz-root .chart-svg-wrap { position: relative; }
+  .viz-root svg.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .viz-root .gridline { stroke: var(--gridline); stroke-width: 1; }
+  .viz-root .axis-text { fill: var(--text-muted); font-size: 11px; }
+  .viz-root .crosshair-line { stroke: var(--baseline); stroke-width: 1; }
+  .viz-root .tooltip {
+    position: absolute; pointer-events: none; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.08s;
+    white-space: nowrap; z-index: 5;
+  }
+  .viz-root .tooltip .t-year { color: var(--text-secondary); font-size: 11px; margin-bottom: 3px; }
+  .viz-root .tooltip .t-row { display: flex; align-items: center; gap: 6px; }
+  .viz-root .tooltip .t-row .key { width: 10px; height: 2px; border-radius: 1px; display: inline-block; }
+  .viz-root .tooltip .t-row .val { font-weight: 650; color: var(--text-primary); margin-left: auto; padding-left: 10px; font-variant-numeric: tabular-nums; }
+  .viz-root details.table-toggle { margin-top: 10px; }
+  .viz-root details.table-toggle summary { cursor: pointer; font-size: 12.5px; color: var(--text-secondary); padding: 6px 0; }
+  .viz-root table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin: 8px 0 12px; }
+  .viz-root table.data-table th, .viz-root table.data-table td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--gridline); white-space: nowrap; }
+  .viz-root table.data-table th:first-child, .viz-root table.data-table td:first-child { text-align: left; }
+  .viz-root .table-scroll { max-height: 320px; overflow-y: auto; overflow-x: auto; }
+  .viz-root footer { color: var(--text-muted); font-size: 12px; margin-top: 40px; line-height: 1.6; border-top: 1px solid var(--gridline); padding-top: 16px; }
+  .viz-root footer a { color: var(--text-secondary); }
+
+  .viz-root .heatmap-legend { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); margin: 4px 0 10px; }
+  .viz-root .heatmap-legend .bar { width: 160px; height: 10px; border-radius: 5px; }
+  .viz-root .heat-cell-label { font-size: 10px; fill: var(--text-muted); }
+  .viz-root .period-picker { margin-bottom: 14px; }
+  .viz-root .period-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .viz-root button.period-btn {
+    font-family: inherit; font-size: 12.5px; color: var(--text-secondary);
+    background: var(--page); border: 1px solid var(--border); border-radius: 7px;
+    padding: 5px 11px; cursor: pointer;
+  }
+  .viz-root button.period-btn:hover { color: var(--text-primary); }
+  .viz-root button.period-btn.active {
+    background: var(--series-1); border-color: var(--series-1); color: #fff; font-weight: 600;
+  }
+</style>
+
+</head>
+<body>
+<div class="viz-root">
+  <h1>Übersterblichkeit Deutschland</h1>
+  <p class="lede">
+    Sterbefallzahlen für Deutschland über die letzten Jahrzehnte — zuerst als Rohdaten
+    (absolute Sterbefälle und rohe Sterberate, 1946–2024), danach altersstandardisiert
+    nach der European Standard Population 2013 (1991–2024), um den Effekt der alternden
+    Bevölkerung herauszurechnen.
+  </p>
+
+  <div class="stat-row" id="stat-row"></div>
+
+  <section class="block">
+    <h2>Rohdaten</h2>
+    <p class="block-note">
+      Absolute Sterbefallzahlen wachsen strukturell mit einer größer und älter werdenden
+      Bevölkerung — sie zeigen noch keine „Übersterblichkeit“, sondern den demografischen
+      Grundtrend.
+    </p>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Sterbefälle absolut, 1946–2024</h3>
+        <div class="chart-svg-wrap" id="chart-raw-deaths"></div>
+        <p class="source">Quelle: Destatis, Zeitreihen 1841–2024, Gebiet Deutschland (jeweils aktueller Gebietsstand)</p>
+      </div>
+      <div class="chart-card">
+        <h3>Rohe Sterberate je 1.000 Einwohner, 1946–2024</h3>
+        <div class="chart-svg-wrap" id="chart-raw-rate"></div>
+        <p class="source">Quelle: Destatis, Zeitreihen 1841–2024, Gebiet Deutschland (jeweils aktueller Gebietsstand)</p>
+      </div>
+    </div>
+    <details class="table-toggle">
+      <summary>Rohdaten als Tabelle anzeigen</summary>
+      <div class="table-scroll" id="table-raw"></div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h2>Altersstandardisiert (ESP2013)</h2>
+    <p class="block-note">
+      Direkte Altersstandardisierung auf die European Standard Population 2013 macht Jahre
+      unabhängig von der jeweiligen Altersstruktur vergleichbar. Nur ab 1991 verfügbar, da
+      die altersspezifischen Eurostat-Reihen erst dann auf wiedervereinigtem Gebiet konsistent
+      sind (vorher Westdeutschland-only).
+    </p>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Altersstandardisierte Sterberate je 100.000, 1991–2024</h3>
+        <div class="chart-svg-wrap" id="chart-asr"></div>
+        <p class="source">Quelle: Eurostat demo_magec / demo_pjan (geo=DE), standardisiert auf ESP2013</p>
+      </div>
+      <div class="chart-card">
+        <h3>Rohe vs. altersstandardisierte Rate (indexiert, 1991 = 100)</h3>
+        <div class="legend" id="legend-compare"></div>
+        <div class="chart-svg-wrap" id="chart-compare"></div>
+        <p class="source">Zeigt, wie viel des Anstiegs der rohen Rate durch die alternde Bevölkerung erklärt wird</p>
+      </div>
+    </div>
+    <details class="table-toggle">
+      <summary>Altersstandardisierte Daten als Tabelle anzeigen</summary>
+      <div class="table-scroll" id="table-age"></div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h2>Saisonale Übersterblichkeit</h2>
+    <p class="block-note">
+      Monatswerte über <span id="monthly-year-span"></span>, jede Zelle verglichen mit dem
+      gleitenden Durchschnitt desselben Kalendermonats in den bis zu 5 vorangehenden Jahren —
+      so werden echte Ausschläge (Hitzewellen, Grippewellen, Pandemie-Wellen) sichtbar statt
+      vom demografischen Alterungstrend überdeckt zu werden.
+    </p>
+    <div class="chart-card full">
+      <h3>Abweichung vom Vorjahres-Durchschnitt, je Monat und Jahr</h3>
+      <div id="heatmap-legend" class="heatmap-legend"></div>
+      <div class="chart-svg-wrap" id="chart-heatmap"></div>
+      <p class="source" id="heatmap-source"></p>
+      <details class="table-toggle">
+        <summary>Als Tabelle anzeigen</summary>
+        <div class="table-scroll" id="table-heatmap"></div>
+      </details>
+    </div>
+
+    <div class="chart-card full" style="margin-top:20px;">
+      <h3 id="heatmap-week-title">Abweichung vom Vorjahres-Durchschnitt, je Kalenderwoche und Jahr</h3>
+      <div class="period-row" id="heatmap-week-metric-buttons" style="margin-bottom:10px;"></div>
+      <div id="heatmap-week-legend" class="heatmap-legend"></div>
+      <div class="chart-svg-wrap" id="chart-heatmap-week"></div>
+      <p class="source" id="heatmap-week-source"></p>
+      <details class="table-toggle">
+        <summary>Als Tabelle anzeigen</summary>
+        <div class="table-scroll" id="table-weekly"></div>
+      </details>
+    </div>
+
+    <div class="chart-card full" style="margin-top:20px;">
+      <h3 id="season-chart-title">Sterbefälle im gewählten Zeitraum, je Jahr</h3>
+      <div class="period-picker">
+        <div class="period-row" id="metric-buttons"></div>
+        <div class="period-row" id="season-buttons"></div>
+        <div class="period-row" id="month-buttons"></div>
+      </div>
+      <div class="chart-svg-wrap" id="chart-season"></div>
+      <p class="source" id="season-chart-source"></p>
+    </div>
+  </section>
+
+  <footer>
+    Rohdaten: Statistisches Bundesamt (Destatis), Statistischer Bericht „Ehescheidungen,
+    Eheschließungen, Geborene und Gestorbene – Zeitreihen 1841–2024“, Gebiet Deutschland
+    (rückwirkend auf jeweils aktuellem Gebietsstand kombiniert). ·
+    Altersstandardisierung: Eurostat, demo_magec (Gestorbene nach Einzelalter) und demo_pjan
+    (Bevölkerung nach Einzelalter), geo=DE, direkt standardisiert auf die European Standard
+    Population 2013 (ESP2013), 19 Altersgruppen. ·
+    Monatsdaten: Eurostat demo_r_mwk_ts (2000–2020) und Destatis-Sonderauswertung
+    „Sterbefälle nach Tagen, Wochen und Monaten“ (ab 2021, laufend aktualisiert),
+    taggenau auf Kalendermonate verteilt. Erstellt am 2026-07-13.
+  </footer>
+</div>
+
+<script id="dashboard-data" type="application/json">{"summary": {"raw_latest_year": 2024, "raw_latest_deaths": 1007758, "age_latest_year": 2024, "age_latest_asr": 1012.1, "baseline_2015_2019_asr": 1029.3, "pct_change_vs_baseline": -1.7, "peak_year": 2022, "peak_asr": 1080.1, "peak_pct_vs_baseline": 4.9}, "raw_annual": {"years": [1946, 1947, 1948, 1949, 1950, 1951, 1952, 1953, 1954, 1955, 1956, 1957, 1958, 1959, 1960, 1961, 1962, 1963, 1964, 1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024], "deaths": [1001571, 932663, 804839, 770852, 748329, 752697, 767639, 790654, 775291, 795938, 812111, 840195, 818418, 835402, 876721, 850300, 878814, 895070, 870319, 907882, 911984, 914417, 976521, 988092, 975664, 965623, 965689, 962988, 956573, 989649, 966873, 931155, 955550, 944474, 952371, 954436, 943832, 941032, 917299, 929649, 925426, 901291, 900627, 903441, 921445, 911245, 885443, 897270, 884661, 884588, 882843, 860389, 852382, 846330, 838797, 828541, 841686, 853946, 818271, 830227, 821627, 827155, 844439, 854544, 858768, 852328, 869582, 893825, 868356, 925200, 910902, 932272, 954874, 939520, 985572, 1023687, 1066341, 1028206, 1007758], "rate_per_1000": [15.5, 14.2, 11.9, 11.3, 10.9, 10.9, 11.1, 11.4, 11.1, 11.3, 11.5, 11.8, 11.4, 11.6, 12.0, 11.6, 11.9, 12.0, 11.6, 12.0, 12.0, 12.0, 12.7, 12.8, 12.6, 12.3, 12.2, 12.2, 12.1, 12.6, 12.3, 11.9, 12.2, 12.1, 12.1, 12.2, 12.1, 12.1, 11.8, 12.0, 11.9, 11.6, 11.5, 11.5, 11.6, 11.4, 11.0, 11.1, 10.9, 10.8, 10.8, 10.5, 10.4, 10.3, 10.2, 10.1, 10.2, 10.3, 9.9, 10.1, 10.0, 10.1, 10.3, 10.4, 10.5, 10.6, 10.8, 11.1, 10.7, 11.3, 11.1, 11.4, 11.6, 11.4, 12.0, 12.5, 12.9, 12.3, 12.0], "source": "Destatis, Statistischer Bericht – Ehescheidungen, Eheschließungen, Geborene und Gestorbene, Zeitreihen 1841-2024 (Gebiet: Deutschland, jeweils aktueller Gebietsstand)"}, "age_adjusted": {"years": [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024], "deaths": [911245, 885443, 897270, 884661, 884588, 882843, 860389, 852382, 846330, 838797, 828541, 841686, 853946, 818271, 830227, 821627, 827155, 844439, 854544, 858768, 852328, 869582, 893825, 868356, 925200, 910902, 932272, 954874, 939520, 985572, 1023687, 1066341, 1028206, 1007758], "population": [79753227, 80274564, 80974632, 81338093, 81538603, 81817499, 82012162, 82057379, 82037011, 82163475, 82259540, 82440309, 82536680, 82531671, 82500849, 82437995, 82314906, 82217837, 82002356, 81802257, 80222065, 80327900, 80523746, 80767463, 81197537, 82175684, 82521653, 82792351, 83019213, 83166711, 83155031, 83237124, 83118501, 83456045], "crude_rate_per_1000": [11.426, 11.03, 11.081, 10.876, 10.849, 10.79, 10.491, 10.388, 10.316, 10.209, 10.072, 10.21, 10.346, 9.915, 10.063, 9.967, 10.049, 10.271, 10.421, 10.498, 10.625, 10.825, 11.1, 10.751, 11.394, 11.085, 11.297, 11.533, 11.317, 11.851, 12.311, 12.811, 12.37, 12.075], "age_std_rate_per_100k": [1534.4, 1472.1, 1471.4, 1432.9, 1412.6, 1387.6, 1336.3, 1308.4, 1284.9, 1250.0, 1209.9, 1210.6, 1213.7, 1149.5, 1145.1, 1106.6, 1093.5, 1099.4, 1096.2, 1079.4, 1077.1, 1067.4, 1072.7, 1021.8, 1061.3, 1022.2, 1025.8, 1034.8, 1002.4, 1027.7, 1049.0, 1080.1, 1043.4, 1012.1], "pct_vs_baseline": [49.1, 43.0, 43.0, 39.2, 37.2, 34.8, 29.8, 27.1, 24.8, 21.4, 17.5, 17.6, 17.9, 11.7, 11.3, 7.5, 6.2, 6.8, 6.5, 4.9, 4.6, 3.7, 4.2, -0.7, 3.1, -0.7, -0.3, 0.5, -2.6, -0.2, 1.9, 4.9, 1.4, -1.7], "source": "Eurostat demo_magec / demo_pjan, geo=DE, direkt altersstandardisiert auf European Standard Population 2013 (ESP2013). Nur ab 1991 (wiedervereinigtes Gebiet)."}, "esp2013_bins": [{"label": "0", "weight": 1000}, {"label": "1-4", "weight": 4000}, {"label": "5-9", "weight": 5500}, {"label": "10-14", "weight": 5500}, {"label": "15-19", "weight": 5500}, {"label": "20-24", "weight": 6000}, {"label": "25-29", "weight": 6000}, {"label": "30-34", "weight": 6500}, {"label": "35-39", "weight": 7000}, {"label": "40-44", "weight": 7000}, {"label": "45-49", "weight": 7000}, {"label": "50-54", "weight": 7000}, {"label": "55-59", "weight": 6500}, {"label": "60-64", "weight": 6000}, {"label": "65-69", "weight": 5500}, {"label": "70-74", "weight": 5000}, {"label": "75-79", "weight": 4000}, {"label": "80-84", "weight": 2500}, {"label": "85-89", "weight": 1500}, {"label": "90+", "weight": 1000}], "monthly": {"years": [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"], "rolling_window": 5, "cells": [[{"deaths": 78969, "baseline": 76388, "pct_vs_baseline": 3.4}, {"deaths": 72655, "baseline": 69668, "pct_vs_baseline": 4.3}, {"deaths": 83341, "baseline": 73892, "pct_vs_baseline": 12.8}, {"deaths": 70035, "baseline": 69734, "pct_vs_baseline": 0.4}, {"deaths": 68426, "baseline": 68420, "pct_vs_baseline": 0.0}, {"deaths": 65888, "baseline": 65678, "pct_vs_baseline": 0.3}, {"deaths": 68619, "baseline": 66760, "pct_vs_baseline": 2.8}, {"deaths": 73403, "baseline": 66568, "pct_vs_baseline": 10.3}, {"deaths": 64549, "baseline": 64135, "pct_vs_baseline": 0.6}, {"deaths": 68791, "baseline": 69248, "pct_vs_baseline": -0.7}, {"deaths": 66940, "baseline": 68919, "pct_vs_baseline": -2.9}, {"deaths": 72470, "baseline": 75158, "pct_vs_baseline": -3.6}], [{"deaths": 75284, "baseline": 77033, "pct_vs_baseline": -2.3}, {"deaths": 68295, "baseline": 70415, "pct_vs_baseline": -3.0}, {"deaths": 73365, "baseline": 76254, "pct_vs_baseline": -3.8}, {"deaths": 67523, "baseline": 69809, "pct_vs_baseline": -3.3}, {"deaths": 66572, "baseline": 68422, "pct_vs_baseline": -2.7}, {"deaths": 64357, "baseline": 65730, "pct_vs_baseline": -2.1}, {"deaths": 65322, "baseline": 67224, "pct_vs_baseline": -2.8}, {"deaths": 65905, "baseline": 68277, "pct_vs_baseline": -3.5}, {"deaths": 63377, "baseline": 64238, "pct_vs_baseline": -1.3}, {"deaths": 68370, "baseline": 69134, "pct_vs_baseline": -1.1}, {"deaths": 66870, "baseline": 68424, "pct_vs_baseline": -2.3}, {"deaths": 72861, "baseline": 74486, "pct_vs_baseline": -2.2}], [{"deaths": 73678, "baseline": 76683, "pct_vs_baseline": -3.9}, {"deaths": 72234, "baseline": 69991, "pct_vs_baseline": 3.2}, {"deaths": 83243, "baseline": 75676, "pct_vs_baseline": 10.0}, {"deaths": 68401, "baseline": 69352, "pct_vs_baseline": -1.4}, {"deaths": 69068, "baseline": 68052, "pct_vs_baseline": 1.5}, {"deaths": 64532, "baseline": 65455, "pct_vs_baseline": -1.4}, {"deaths": 64849, "baseline": 66844, "pct_vs_baseline": -3.0}, {"deaths": 64035, "baseline": 67802, "pct_vs_baseline": -5.6}, {"deaths": 62199, "baseline": 64066, "pct_vs_baseline": -2.9}, {"deaths": 67082, "baseline": 68981, "pct_vs_baseline": -2.8}, {"deaths": 67418, "baseline": 68113, "pct_vs_baseline": -1.0}, {"deaths": 73601, "baseline": 74161, "pct_vs_baseline": -0.8}], [{"deaths": 74255, "baseline": 75721, "pct_vs_baseline": -1.9}, {"deaths": 66824, "baseline": 68997, "pct_vs_baseline": -3.1}, {"deaths": 73534, "baseline": 77650, "pct_vs_baseline": -5.3}, {"deaths": 68197, "baseline": 69382, "pct_vs_baseline": -1.7}, {"deaths": 68023, "baseline": 68455, "pct_vs_baseline": -0.6}, {"deaths": 65949, "baseline": 65351, "pct_vs_baseline": 0.9}, {"deaths": 72713, "baseline": 66804, "pct_vs_baseline": 8.8}, {"deaths": 65206, "baseline": 67509, "pct_vs_baseline": -3.4}, {"deaths": 64254, "baseline": 63773, "pct_vs_baseline": 0.8}, {"deaths": 66097, "baseline": 68678, "pct_vs_baseline": -3.8}, {"deaths": 66288, "baseline": 67882, "pct_vs_baseline": -2.3}, {"deaths": 70292, "baseline": 74332, "pct_vs_baseline": -5.4}], [{"deaths": 72629, "baseline": 75607, "pct_vs_baseline": -3.9}, {"deaths": 67448, "baseline": 69214, "pct_vs_baseline": -2.6}, {"deaths": 76063, "baseline": 77721, "pct_vs_baseline": -2.1}, {"deaths": 69979, "baseline": 69181, "pct_vs_baseline": 1.2}, {"deaths": 67654, "baseline": 68216, "pct_vs_baseline": -0.8}, {"deaths": 63953, "baseline": 65475, "pct_vs_baseline": -2.3}, {"deaths": 66735, "baseline": 67653, "pct_vs_baseline": -1.4}, {"deaths": 64268, "baseline": 67172, "pct_vs_baseline": -4.3}, {"deaths": 63109, "baseline": 63721, "pct_vs_baseline": -1.0}, {"deaths": 68602, "baseline": 68257, "pct_vs_baseline": 0.5}, {"deaths": 70196, "baseline": 67425, "pct_vs_baseline": 4.1}, {"deaths": 76651, "baseline": 73493, "pct_vs_baseline": 4.3}], [{"deaths": 79362, "baseline": 74963, "pct_vs_baseline": 5.9}, {"deaths": 71113, "baseline": 69491, "pct_vs_baseline": 2.3}, {"deaths": 75992, "baseline": 77909, "pct_vs_baseline": -2.5}, {"deaths": 70967, "baseline": 68827, "pct_vs_baseline": 3.1}, {"deaths": 70307, "baseline": 67949, "pct_vs_baseline": 3.5}, {"deaths": 64591, "baseline": 64936, "pct_vs_baseline": -0.5}, {"deaths": 66563, "baseline": 67648, "pct_vs_baseline": -1.6}, {"deaths": 65696, "baseline": 66563, "pct_vs_baseline": -1.3}, {"deaths": 64167, "baseline": 63498, "pct_vs_baseline": 1.1}, {"deaths": 69752, "baseline": 67788, "pct_vs_baseline": 2.9}, {"deaths": 68915, "baseline": 67542, "pct_vs_baseline": 2.0}, {"deaths": 77151, "baseline": 73175, "pct_vs_baseline": 5.4}], [{"deaths": 89717, "baseline": 75042, "pct_vs_baseline": 19.6}, {"deaths": 77181, "baseline": 69183, "pct_vs_baseline": 11.6}, {"deaths": 76111, "baseline": 76439, "pct_vs_baseline": -0.4}, {"deaths": 68762, "baseline": 69014, "pct_vs_baseline": -0.4}, {"deaths": 68195, "baseline": 68325, "pct_vs_baseline": -0.2}, {"deaths": 64959, "baseline": 64676, "pct_vs_baseline": 0.4}, {"deaths": 66239, "baseline": 67236, "pct_vs_baseline": -1.5}, {"deaths": 65067, "baseline": 65022, "pct_vs_baseline": 0.1}, {"deaths": 63321, "baseline": 63421, "pct_vs_baseline": -0.2}, {"deaths": 69461, "baseline": 67980, "pct_vs_baseline": 2.2}, {"deaths": 69923, "baseline": 67937, "pct_vs_baseline": 2.9}, {"deaths": 75144, "baseline": 74111, "pct_vs_baseline": 1.4}], [{"deaths": 77585, "baseline": 77928, "pct_vs_baseline": -0.4}, {"deaths": 71266, "baseline": 70960, "pct_vs_baseline": 0.4}, {"deaths": 76167, "baseline": 76988, "pct_vs_baseline": -1.1}, {"deaths": 69676, "baseline": 69261, "pct_vs_baseline": 0.6}, {"deaths": 70277, "baseline": 68649, "pct_vs_baseline": 2.4}, {"deaths": 67256, "baseline": 64797, "pct_vs_baseline": 3.8}, {"deaths": 73204, "baseline": 67420, "pct_vs_baseline": 8.6}, {"deaths": 67483, "baseline": 64854, "pct_vs_baseline": 4.1}, {"deaths": 66724, "baseline": 63410, "pct_vs_baseline": 5.2}, {"deaths": 71208, "baseline": 68199, "pct_vs_baseline": 4.4}, {"deaths": 69728, "baseline": 68548, "pct_vs_baseline": 1.7}, {"deaths": 78456, "baseline": 74568, "pct_vs_baseline": 5.2}], [{"deaths": 76778, "baseline": 78710, "pct_vs_baseline": -2.5}, {"deaths": 69499, "baseline": 70766, "pct_vs_baseline": -1.8}, {"deaths": 76872, "baseline": 75573, "pct_vs_baseline": 1.7}, {"deaths": 70217, "baseline": 69516, "pct_vs_baseline": 1.0}, {"deaths": 70503, "baseline": 68891, "pct_vs_baseline": 2.3}, {"deaths": 65295, "baseline": 65342, "pct_vs_baseline": -0.1}, {"deaths": 67057, "baseline": 69091, "pct_vs_baseline": -2.9}, {"deaths": 68741, "baseline": 65544, "pct_vs_baseline": 4.9}, {"deaths": 64877, "baseline": 64315, "pct_vs_baseline": 0.9}, {"deaths": 71919, "baseline": 69024, "pct_vs_baseline": 4.2}, {"deaths": 72070, "baseline": 69010, "pct_vs_baseline": 4.4}, {"deaths": 78505, "baseline": 75539, "pct_vs_baseline": 3.9}], [{"deaths": 76849, "baseline": 79214, "pct_vs_baseline": -3.0}, {"deaths": 76285, "baseline": 71301, "pct_vs_baseline": 7.0}, {"deaths": 78291, "baseline": 76241, "pct_vs_baseline": 2.7}, {"deaths": 73333, "baseline": 69920, "pct_vs_baseline": 4.9}, {"deaths": 71334, "baseline": 69387, "pct_vs_baseline": 2.8}, {"deaths": 66605, "baseline": 65211, "pct_vs_baseline": 2.1}, {"deaths": 68685, "baseline": 67959, "pct_vs_baseline": 1.1}, {"deaths": 68209, "baseline": 66251, "pct_vs_baseline": 3.0}, {"deaths": 66201, "baseline": 64440, "pct_vs_baseline": 2.7}, {"deaths": 72497, "baseline": 70188, "pct_vs_baseline": 3.3}, {"deaths": 72458, "baseline": 70166, "pct_vs_baseline": 3.3}, {"deaths": 78812, "baseline": 77181, "pct_vs_baseline": 2.1}], [{"deaths": 82099, "baseline": 80058, "pct_vs_baseline": 2.5}, {"deaths": 81881, "baseline": 73069, "pct_vs_baseline": 12.1}, {"deaths": 89585, "baseline": 76687, "pct_vs_baseline": 16.8}, {"deaths": 78536, "baseline": 70591, "pct_vs_baseline": 11.3}, {"deaths": 71453, "baseline": 70123, "pct_vs_baseline": 1.9}, {"deaths": 68781, "baseline": 65741, "pct_vs_baseline": 4.6}, {"deaths": 70451, "baseline": 68350, "pct_vs_baseline": 3.1}, {"deaths": 67866, "baseline": 67039, "pct_vs_baseline": 1.2}, {"deaths": 65781, "baseline": 65058, "pct_vs_baseline": 1.1}, {"deaths": 71669, "baseline": 70967, "pct_vs_baseline": 1.0}, {"deaths": 70134, "baseline": 70619, "pct_vs_baseline": -0.7}, {"deaths": 75777, "baseline": 77614, "pct_vs_baseline": -2.4}], [{"deaths": 75243, "baseline": 80606, "pct_vs_baseline": -6.7}, {"deaths": 69518, "baseline": 75222, "pct_vs_baseline": -7.6}, {"deaths": 77399, "baseline": 79405, "pct_vs_baseline": -2.5}, {"deaths": 71644, "baseline": 72105, "pct_vs_baseline": -0.6}, {"deaths": 70358, "baseline": 70352, "pct_vs_baseline": 0.0}, {"deaths": 67705, "baseline": 66579, "pct_vs_baseline": 1.7}, {"deaths": 71610, "baseline": 69127, "pct_vs_baseline": 3.6}, {"deaths": 68678, "baseline": 67473, "pct_vs_baseline": 1.8}, {"deaths": 68471, "baseline": 65381, "pct_vs_baseline": 4.7}, {"deaths": 72726, "baseline": 71351, "pct_vs_baseline": 1.9}, {"deaths": 73648, "baseline": 70863, "pct_vs_baseline": 3.9}, {"deaths": 81136, "baseline": 77339, "pct_vs_baseline": 4.9}], [{"deaths": 86579, "baseline": 77711, "pct_vs_baseline": 11.4}, {"deaths": 89750, "baseline": 73690, "pct_vs_baseline": 21.8}, {"deaths": 90592, "baseline": 79663, "pct_vs_baseline": 13.7}, {"deaths": 76987, "baseline": 72681, "pct_vs_baseline": 5.9}, {"deaths": 73669, "baseline": 70785, "pct_vs_baseline": 4.1}, {"deaths": 70321, "baseline": 67128, "pct_vs_baseline": 4.8}, {"deaths": 74854, "baseline": 70201, "pct_vs_baseline": 6.6}, {"deaths": 71527, "baseline": 68195, "pct_vs_baseline": 4.9}, {"deaths": 68112, "baseline": 66411, "pct_vs_baseline": 2.6}, {"deaths": 74749, "baseline": 72004, "pct_vs_baseline": 3.8}, {"deaths": 72122, "baseline": 71607, "pct_vs_baseline": 0.7}, {"deaths": 76051, "baseline": 78537, "pct_vs_baseline": -3.2}], [{"deaths": 81616, "baseline": 79510, "pct_vs_baseline": 2.6}, {"deaths": 76696, "baseline": 77386, "pct_vs_baseline": -0.9}, {"deaths": 83546, "baseline": 82548, "pct_vs_baseline": 1.2}, {"deaths": 75327, "baseline": 74143, "pct_vs_baseline": 1.6}, {"deaths": 74523, "baseline": 71463, "pct_vs_baseline": 4.3}, {"deaths": 69073, "baseline": 67741, "pct_vs_baseline": 2.0}, {"deaths": 72271, "baseline": 70531, "pct_vs_baseline": 2.5}, {"deaths": 71231, "baseline": 69004, "pct_vs_baseline": 3.2}, {"deaths": 68963, "baseline": 66688, "pct_vs_baseline": 3.4}, {"deaths": 76143, "baseline": 72712, "pct_vs_baseline": 4.7}, {"deaths": 77129, "baseline": 72086, "pct_vs_baseline": 7.0}, {"deaths": 84347, "baseline": 78056, "pct_vs_baseline": 8.1}], [{"deaths": 95882, "baseline": 80477, "pct_vs_baseline": 19.1}, {"deaths": 90559, "baseline": 78826, "pct_vs_baseline": 14.9}, {"deaths": 83022, "baseline": 83883, "pct_vs_baseline": -1.0}, {"deaths": 73266, "baseline": 75165, "pct_vs_baseline": -2.5}, {"deaths": 75246, "baseline": 72268, "pct_vs_baseline": 4.1}, {"deaths": 69893, "baseline": 68497, "pct_vs_baseline": 2.0}, {"deaths": 71623, "baseline": 71574, "pct_vs_baseline": 0.1}, {"deaths": 71129, "baseline": 69502, "pct_vs_baseline": 2.3}, {"deaths": 69596, "baseline": 67505, "pct_vs_baseline": 3.1}, {"deaths": 75514, "baseline": 73557, "pct_vs_baseline": 2.7}, {"deaths": 74829, "baseline": 73098, "pct_vs_baseline": 2.4}, {"deaths": 81613, "baseline": 79225, "pct_vs_baseline": 3.0}], [{"deaths": 84852, "baseline": 84284, "pct_vs_baseline": 0.7}, {"deaths": 86348, "baseline": 81681, "pct_vs_baseline": 5.7}, {"deaths": 106450, "baseline": 84829, "pct_vs_baseline": 25.5}, {"deaths": 79673, "baseline": 75152, "pct_vs_baseline": 6.0}, {"deaths": 74354, "baseline": 73050, "pct_vs_baseline": 1.8}, {"deaths": 69643, "baseline": 69154, "pct_vs_baseline": 0.7}, {"deaths": 75921, "baseline": 72162, "pct_vs_baseline": 5.2}, {"deaths": 77959, "baseline": 70086, "pct_vs_baseline": 11.2}, {"deaths": 69873, "baseline": 68185, "pct_vs_baseline": 2.5}, {"deaths": 74016, "baseline": 74160, "pct_vs_baseline": -0.2}, {"deaths": 74807, "baseline": 73572, "pct_vs_baseline": 1.7}, {"deaths": 81067, "baseline": 79785, "pct_vs_baseline": 1.6}], [{"deaths": 85176, "baseline": 84834, "pct_vs_baseline": 0.4}, {"deaths": 80851, "baseline": 82574, "pct_vs_baseline": -2.1}, {"deaths": 86736, "baseline": 88202, "pct_vs_baseline": -1.7}, {"deaths": 77389, "baseline": 75379, "pct_vs_baseline": 2.7}, {"deaths": 75807, "baseline": 73630, "pct_vs_baseline": 3.0}, {"deaths": 73367, "baseline": 69327, "pct_vs_baseline": 5.8}, {"deaths": 76657, "baseline": 73256, "pct_vs_baseline": 4.6}, {"deaths": 73588, "baseline": 72105, "pct_vs_baseline": 2.1}, {"deaths": 71127, "baseline": 69003, "pct_vs_baseline": 3.1}, {"deaths": 77184, "baseline": 74629, "pct_vs_baseline": 3.4}, {"deaths": 78057, "baseline": 74507, "pct_vs_baseline": 4.8}, {"deaths": 83560, "baseline": 80843, "pct_vs_baseline": 3.4}], [{"deaths": 84800, "baseline": 86821, "pct_vs_baseline": -2.3}, {"deaths": 80007, "baseline": 84841, "pct_vs_baseline": -5.7}, {"deaths": 87606, "baseline": 90069, "pct_vs_baseline": -2.7}, {"deaths": 83319, "baseline": 76528, "pct_vs_baseline": 8.9}, {"deaths": 76271, "baseline": 74720, "pct_vs_baseline": 2.1}, {"deaths": 72259, "baseline": 70459, "pct_vs_baseline": 2.6}, {"deaths": 73773, "baseline": 74265, "pct_vs_baseline": -0.7}, {"deaths": 78784, "baseline": 73087, "pct_vs_baseline": 7.8}, {"deaths": 74095, "baseline": 69534, "pct_vs_baseline": 6.6}, {"deaths": 79837, "baseline": 75521, "pct_vs_baseline": 5.7}, {"deaths": 86104, "baseline": 75389, "pct_vs_baseline": 14.2}, {"deaths": 108226, "baseline": 81327, "pct_vs_baseline": 33.1}], [{"deaths": 107181, "baseline": 86465, "pct_vs_baseline": 24.0}, {"deaths": 82191, "baseline": 82892, "pct_vs_baseline": -0.8}, {"deaths": 81809, "baseline": 89472, "pct_vs_baseline": -8.6}, {"deaths": 81804, "baseline": 77795, "pct_vs_baseline": 5.2}, {"deaths": 81098, "baseline": 75240, "pct_vs_baseline": 7.8}, {"deaths": 76593, "baseline": 70847, "pct_vs_baseline": 8.1}, {"deaths": 76743, "baseline": 74049, "pct_vs_baseline": 3.6}, {"deaths": 76646, "baseline": 74538, "pct_vs_baseline": 2.8}, {"deaths": 77839, "baseline": 70731, "pct_vs_baseline": 10.0}, {"deaths": 85076, "baseline": 76539, "pct_vs_baseline": 11.2}, {"deaths": 94024, "baseline": 78186, "pct_vs_baseline": 20.3}, {"deaths": 102634, "baseline": 87762, "pct_vs_baseline": 16.9}], [{"deaths": 90152, "baseline": 91578, "pct_vs_baseline": -1.6}, {"deaths": 82749, "baseline": 83991, "pct_vs_baseline": -1.5}, {"deaths": 93615, "baseline": 89125, "pct_vs_baseline": 5.0}, {"deaths": 86330, "baseline": 79090, "pct_vs_baseline": 9.2}, {"deaths": 82225, "baseline": 76555, "pct_vs_baseline": 7.4}, {"deaths": 79054, "baseline": 72351, "pct_vs_baseline": 9.3}, {"deaths": 86413, "baseline": 74944, "pct_vs_baseline": 15.3}, {"deaths": 86568, "baseline": 75621, "pct_vs_baseline": 14.5}, {"deaths": 81201, "baseline": 72506, "pct_vs_baseline": 12.0}, {"deaths": 94362, "baseline": 78325, "pct_vs_baseline": 20.5}, {"deaths": 89095, "baseline": 81564, "pct_vs_baseline": 9.2}, {"deaths": 114904, "baseline": 91420, "pct_vs_baseline": 25.7}], [{"deaths": 100009, "baseline": 90432, "pct_vs_baseline": 10.6}, {"deaths": 83518, "baseline": 82429, "pct_vs_baseline": 1.3}, {"deaths": 94940, "baseline": 91243, "pct_vs_baseline": 4.1}, {"deaths": 85225, "baseline": 81703, "pct_vs_baseline": 4.3}, {"deaths": 82480, "baseline": 77951, "pct_vs_baseline": 5.8}, {"deaths": 76832, "baseline": 74183, "pct_vs_baseline": 3.6}, {"deaths": 75967, "baseline": 77902, "pct_vs_baseline": -2.5}, {"deaths": 78193, "baseline": 78709, "pct_vs_baseline": -0.7}, {"deaths": 75805, "baseline": 74827, "pct_vs_baseline": 1.3}, {"deaths": 85153, "baseline": 82095, "pct_vs_baseline": 3.7}, {"deaths": 89727, "baseline": 84418, "pct_vs_baseline": 6.3}, {"deaths": 100457, "baseline": 98078, "pct_vs_baseline": 2.4}], [{"deaths": 96635, "baseline": 93464, "pct_vs_baseline": 3.4}, {"deaths": 87602, "baseline": 81863, "pct_vs_baseline": 7.0}, {"deaths": 84876, "baseline": 88941, "pct_vs_baseline": -4.6}, {"deaths": 79767, "baseline": 82813, "pct_vs_baseline": -3.7}, {"deaths": 80597, "baseline": 79576, "pct_vs_baseline": 1.3}, {"deaths": 77715, "baseline": 75621, "pct_vs_baseline": 2.8}, {"deaths": 78199, "baseline": 77911, "pct_vs_baseline": 0.4}, {"deaths": 78711, "baseline": 78756, "pct_vs_baseline": -0.1}, {"deaths": 78884, "baseline": 76013, "pct_vs_baseline": 3.8}, {"deaths": 86633, "baseline": 84322, "pct_vs_baseline": 2.7}, {"deaths": 86429, "baseline": 87402, "pct_vs_baseline": -1.1}, {"deaths": 91814, "baseline": 101956, "pct_vs_baseline": -9.9}], [{"deaths": 98336, "baseline": 95756, "pct_vs_baseline": 2.7}, {"deaths": 91395, "baseline": 83214, "pct_vs_baseline": 9.8}, {"deaths": 94918, "baseline": 88569, "pct_vs_baseline": 7.2}, {"deaths": 82230, "baseline": 83289, "pct_vs_baseline": -1.3}, {"deaths": 79720, "baseline": 80534, "pct_vs_baseline": -1.0}, {"deaths": 75558, "baseline": 76491, "pct_vs_baseline": -1.2}, {"deaths": 76815, "baseline": 78219, "pct_vs_baseline": -1.8}, {"deaths": 77306, "baseline": 79780, "pct_vs_baseline": -3.1}, {"deaths": 74647, "baseline": 77565, "pct_vs_baseline": -3.8}, {"deaths": 83181, "baseline": 86212, "pct_vs_baseline": -3.5}, {"deaths": 82797, "baseline": 89076, "pct_vs_baseline": -7.0}, {"deaths": 89726, "baseline": 103607, "pct_vs_baseline": -13.4}], [{"deaths": 100197, "baseline": 98463, "pct_vs_baseline": 1.8}, {"deaths": 86823, "baseline": 85491, "pct_vs_baseline": 1.6}, {"deaths": 84557, "baseline": 90032, "pct_vs_baseline": -6.1}, {"deaths": 79398, "baseline": 83071, "pct_vs_baseline": -4.4}, {"deaths": 79860, "baseline": 81224, "pct_vs_baseline": -1.7}, {"deaths": 75982, "baseline": 77150, "pct_vs_baseline": -1.5}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}]], "monthly_deaths": {"2000": [78490, 77204, 73374, 68251, 67052, 65054, 65051, 65499, 63663, 68594, 68574, 72747], "2001": [74825, 65735, 73177, 69203, 69217, 65328, 68468, 66892, 64516, 68206, 68572, 74485], "2002": [75849, 66064, 75123, 71747, 68992, 66651, 66760, 67313, 64225, 70944, 69610, 78242], "2003": [78969, 72655, 83341, 70035, 68426, 65888, 68619, 73403, 64549, 68791, 66940, 72470], "2004": [75284, 68295, 73365, 67523, 66572, 64357, 65322, 65905, 63377, 68370, 66870, 72861], "2005": [73678, 72234, 83243, 68401, 69068, 64532, 64849, 64035, 62199, 67082, 67418, 73601], "2006": [74255, 66824, 73534, 68197, 68023, 65949, 72713, 65206, 64254, 66097, 66288, 70292], "2007": [72629, 67448, 76063, 69979, 67654, 63953, 66735, 64268, 63109, 68602, 70196, 76651], "2008": [79362, 71113, 75992, 70967, 70307, 64591, 66563, 65696, 64167, 69752, 68915, 77151], "2009": [89717, 77181, 76111, 68762, 68195, 64959, 66239, 65067, 63321, 69461, 69923, 75144], "2010": [77585, 71266, 76167, 69676, 70277, 67256, 73204, 67483, 66724, 71208, 69728, 78456], "2011": [76778, 69499, 76872, 70217, 70503, 65295, 67057, 68741, 64877, 71919, 72070, 78505], "2012": [76849, 76285, 78291, 73333, 71334, 66605, 68685, 68209, 66201, 72497, 72458, 78812], "2013": [82099, 81881, 89585, 78536, 71453, 68781, 70451, 67866, 65781, 71669, 70134, 75777], "2014": [75243, 69518, 77399, 71644, 70358, 67705, 71610, 68678, 68471, 72726, 73648, 81136], "2015": [86579, 89750, 90592, 76987, 73669, 70321, 74854, 71527, 68112, 74749, 72122, 76051], "2016": [81616, 76696, 83546, 75327, 74523, 69073, 72271, 71231, 68963, 76143, 77129, 84347], "2017": [95882, 90559, 83022, 73266, 75246, 69893, 71623, 71129, 69596, 75514, 74829, 81613], "2018": [84852, 86348, 106450, 79673, 74354, 69643, 75921, 77959, 69873, 74016, 74807, 81067], "2019": [85176, 80851, 86736, 77389, 75807, 73367, 76657, 73588, 71127, 77184, 78057, 83560], "2020": [84800, 80007, 87606, 83319, 76271, 72259, 73773, 78784, 74095, 79837, 86104, 108226], "2021": [107181, 82191, 81809, 81804, 81098, 76593, 76743, 76646, 77839, 85076, 94024, 102634], "2022": [90152, 82749, 93615, 86330, 82225, 79054, 86413, 86568, 81201, 94362, 89095, 114904], "2023": [100009, 83518, 94940, 85225, 82480, 76832, 75967, 78193, 75805, 85153, 89727, 100457], "2024": [96635, 87602, 84876, 79767, 80597, 77715, 78199, 78711, 78884, 86633, 86429, 91814], "2025": [98336, 91395, 94918, 82230, 79720, 75558, 76815, 77306, 74647, 83181, 82797, 89726], "2026": [100197, 86823, 84557, 79398, 79860, 75982, null, null, null, null, null, null]}, "weekly": {"years": [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], "max_kw": 53, "cells": [[{"deaths": 18235, "baseline": 17628, "pct_vs_baseline": 3.4}, {"deaths": 18265, "baseline": 17425, "pct_vs_baseline": 4.8}, {"deaths": 17861, "baseline": 17596, "pct_vs_baseline": 1.5}, {"deaths": 17509, "baseline": 18050, "pct_vs_baseline": -3.0}, {"deaths": 17233, "baseline": 17884, "pct_vs_baseline": -3.6}, {"deaths": 17372, "baseline": 17418, "pct_vs_baseline": -0.3}, {"deaths": 17256, "baseline": 16790, "pct_vs_baseline": 2.8}, {"deaths": 18607, "baseline": 16814, "pct_vs_baseline": 10.7}, {"deaths": 20295, "baseline": 17013, "pct_vs_baseline": 19.3}, {"deaths": 20076, "baseline": 16911, "pct_vs_baseline": 18.7}, {"deaths": 19138, "baseline": 16633, "pct_vs_baseline": 15.1}, {"deaths": 18248, "baseline": 16533, "pct_vs_baseline": 10.4}, {"deaths": 17670, "baseline": 16392, "pct_vs_baseline": 7.8}, {"deaths": 16873, "baseline": 16501, "pct_vs_baseline": 2.3}, {"deaths": 16478, "baseline": 16288, "pct_vs_baseline": 1.2}, {"deaths": 16376, "baseline": 16248, "pct_vs_baseline": 0.8}, {"deaths": 16043, "baseline": 16098, "pct_vs_baseline": -0.3}, {"deaths": 15575, "baseline": 15697, "pct_vs_baseline": -0.8}, {"deaths": 15668, "baseline": 15764, "pct_vs_baseline": -0.6}, {"deaths": 15042, "baseline": 15400, "pct_vs_baseline": -2.3}, {"deaths": 15379, "baseline": 15180, "pct_vs_baseline": 1.3}, {"deaths": 15676, "baseline": 15186, "pct_vs_baseline": 3.2}, {"deaths": 16405, "baseline": 15336, "pct_vs_baseline": 7.0}, {"deaths": 15373, "baseline": 15107, "pct_vs_baseline": 1.8}, {"deaths": 14603, "baseline": 15799, "pct_vs_baseline": -7.6}, {"deaths": 15143, "baseline": 15045, "pct_vs_baseline": 0.7}, {"deaths": 14869, "baseline": 15155, "pct_vs_baseline": -1.9}, {"deaths": 15022, "baseline": 14944, "pct_vs_baseline": 0.5}, {"deaths": 16195, "baseline": 14819, "pct_vs_baseline": 9.3}, {"deaths": 16035, "baseline": 15211, "pct_vs_baseline": 5.4}, {"deaths": 15089, "baseline": 15534, "pct_vs_baseline": -2.9}, {"deaths": 18306, "baseline": 14561, "pct_vs_baseline": 25.7}, {"deaths": 18810, "baseline": 15407, "pct_vs_baseline": 22.1}, {"deaths": 15244, "baseline": 14983, "pct_vs_baseline": 1.7}, {"deaths": 14576, "baseline": 14767, "pct_vs_baseline": -1.3}, {"deaths": 15043, "baseline": 14661, "pct_vs_baseline": 2.6}, {"deaths": 14776, "baseline": 14976, "pct_vs_baseline": -1.3}, {"deaths": 15480, "baseline": 14981, "pct_vs_baseline": 3.3}, {"deaths": 14986, "baseline": 15306, "pct_vs_baseline": -2.1}, {"deaths": 14924, "baseline": 15366, "pct_vs_baseline": -2.9}, {"deaths": 15187, "baseline": 15711, "pct_vs_baseline": -3.3}, {"deaths": 15372, "baseline": 15666, "pct_vs_baseline": -1.9}, {"deaths": 15928, "baseline": 15796, "pct_vs_baseline": 0.8}, {"deaths": 16302, "baseline": 15679, "pct_vs_baseline": 4.0}, {"deaths": 15543, "baseline": 15889, "pct_vs_baseline": -2.2}, {"deaths": 15841, "baseline": 16267, "pct_vs_baseline": -2.6}, {"deaths": 15647, "baseline": 16238, "pct_vs_baseline": -3.6}, {"deaths": 15251, "baseline": 16189, "pct_vs_baseline": -5.8}, {"deaths": 15479, "baseline": 16223, "pct_vs_baseline": -4.6}, {"deaths": 16419, "baseline": 16694, "pct_vs_baseline": -1.6}, {"deaths": 16414, "baseline": 17300, "pct_vs_baseline": -5.1}, {"deaths": 16811, "baseline": 17770, "pct_vs_baseline": -5.4}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 17143, "baseline": 17780, "pct_vs_baseline": -3.6}, {"deaths": 17219, "baseline": 17635, "pct_vs_baseline": -2.4}, {"deaths": 17098, "baseline": 17662, "pct_vs_baseline": -3.2}, {"deaths": 16603, "baseline": 17915, "pct_vs_baseline": -7.3}, {"deaths": 16996, "baseline": 17721, "pct_vs_baseline": -4.1}, {"deaths": 16830, "baseline": 17406, "pct_vs_baseline": -3.3}, {"deaths": 16318, "baseline": 16906, "pct_vs_baseline": -3.5}, {"deaths": 16124, "baseline": 17262, "pct_vs_baseline": -6.6}, {"deaths": 16595, "baseline": 17834, "pct_vs_baseline": -6.9}, {"deaths": 16512, "baseline": 17702, "pct_vs_baseline": -6.7}, {"deaths": 17128, "baseline": 17259, "pct_vs_baseline": -0.8}, {"deaths": 17067, "baseline": 16962, "pct_vs_baseline": 0.6}, {"deaths": 15632, "baseline": 16712, "pct_vs_baseline": -6.5}, {"deaths": 16393, "baseline": 16594, "pct_vs_baseline": -1.2}, {"deaths": 15681, "baseline": 16336, "pct_vs_baseline": -4.0}, {"deaths": 15741, "baseline": 16280, "pct_vs_baseline": -3.3}, {"deaths": 15554, "baseline": 16084, "pct_vs_baseline": -3.3}, {"deaths": 15652, "baseline": 15666, "pct_vs_baseline": -0.1}, {"deaths": 15213, "baseline": 15740, "pct_vs_baseline": -3.3}, {"deaths": 14908, "baseline": 15311, "pct_vs_baseline": -2.6}, {"deaths": 14872, "baseline": 15230, "pct_vs_baseline": -2.4}, {"deaths": 14939, "baseline": 15309, "pct_vs_baseline": -2.4}, {"deaths": 15179, "baseline": 15603, "pct_vs_baseline": -2.7}, {"deaths": 15762, "baseline": 15174, "pct_vs_baseline": 3.9}, {"deaths": 14741, "baseline": 15500, "pct_vs_baseline": -4.9}, {"deaths": 14541, "baseline": 15070, "pct_vs_baseline": -3.5}, {"deaths": 14705, "baseline": 15084, "pct_vs_baseline": -2.5}, {"deaths": 14503, "baseline": 14963, "pct_vs_baseline": -3.1}, {"deaths": 14968, "baseline": 15163, "pct_vs_baseline": -1.3}, {"deaths": 15046, "baseline": 15417, "pct_vs_baseline": -2.4}, {"deaths": 14469, "baseline": 15423, "pct_vs_baseline": -6.2}, {"deaths": 15579, "baseline": 15497, "pct_vs_baseline": 0.5}, {"deaths": 15293, "baseline": 16258, "pct_vs_baseline": -5.9}, {"deaths": 14486, "baseline": 15048, "pct_vs_baseline": -3.7}, {"deaths": 14297, "baseline": 14719, "pct_vs_baseline": -2.9}, {"deaths": 14639, "baseline": 14756, "pct_vs_baseline": -0.8}, {"deaths": 14850, "baseline": 14926, "pct_vs_baseline": -0.5}, {"deaths": 14630, "baseline": 15106, "pct_vs_baseline": -3.2}, {"deaths": 14813, "baseline": 15226, "pct_vs_baseline": -2.7}, {"deaths": 15098, "baseline": 15256, "pct_vs_baseline": -1.0}, {"deaths": 15159, "baseline": 15580, "pct_vs_baseline": -2.7}, {"deaths": 15328, "baseline": 15592, "pct_vs_baseline": -1.7}, {"deaths": 15890, "baseline": 15829, "pct_vs_baseline": 0.4}, {"deaths": 15522, "baseline": 15835, "pct_vs_baseline": -2.0}, {"deaths": 14753, "baseline": 15802, "pct_vs_baseline": -6.6}, {"deaths": 15612, "baseline": 16161, "pct_vs_baseline": -3.4}, {"deaths": 15953, "baseline": 16090, "pct_vs_baseline": -0.9}, {"deaths": 16003, "baseline": 15954, "pct_vs_baseline": 0.3}, {"deaths": 15923, "baseline": 16037, "pct_vs_baseline": -0.7}, {"deaths": 16079, "baseline": 16625, "pct_vs_baseline": -3.3}, {"deaths": 16510, "baseline": 17078, "pct_vs_baseline": -3.3}, {"deaths": 16861, "baseline": 17530, "pct_vs_baseline": -3.8}, {"deaths": 16852, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 17002, "baseline": 17652, "pct_vs_baseline": -3.7}, {"deaths": 16361, "baseline": 17552, "pct_vs_baseline": -6.8}, {"deaths": 16504, "baseline": 17549, "pct_vs_baseline": -6.0}, {"deaths": 16588, "baseline": 17652, "pct_vs_baseline": -6.0}, {"deaths": 16859, "baseline": 17576, "pct_vs_baseline": -4.1}, {"deaths": 17632, "baseline": 17291, "pct_vs_baseline": 2.0}, {"deaths": 18284, "baseline": 16789, "pct_vs_baseline": 8.9}, {"deaths": 19026, "baseline": 17035, "pct_vs_baseline": 11.7}, {"deaths": 19892, "baseline": 17586, "pct_vs_baseline": 13.1}, {"deaths": 19789, "baseline": 17464, "pct_vs_baseline": 13.3}, {"deaths": 19238, "baseline": 17233, "pct_vs_baseline": 11.6}, {"deaths": 17821, "baseline": 16983, "pct_vs_baseline": 4.9}, {"deaths": 16354, "baseline": 16496, "pct_vs_baseline": -0.9}, {"deaths": 16295, "baseline": 16554, "pct_vs_baseline": -1.6}, {"deaths": 16164, "baseline": 16205, "pct_vs_baseline": -0.3}, {"deaths": 15549, "baseline": 16172, "pct_vs_baseline": -3.9}, {"deaths": 15615, "baseline": 15978, "pct_vs_baseline": -2.3}, {"deaths": 15426, "baseline": 15663, "pct_vs_baseline": -1.5}, {"deaths": 15436, "baseline": 15634, "pct_vs_baseline": -1.3}, {"deaths": 15390, "baseline": 15230, "pct_vs_baseline": 1.0}, {"deaths": 16264, "baseline": 15158, "pct_vs_baseline": 7.3}, {"deaths": 15125, "baseline": 15235, "pct_vs_baseline": -0.7}, {"deaths": 14245, "baseline": 15518, "pct_vs_baseline": -8.2}, {"deaths": 15138, "baseline": 15291, "pct_vs_baseline": -1.0}, {"deaths": 15968, "baseline": 15348, "pct_vs_baseline": 4.0}, {"deaths": 14660, "baseline": 14964, "pct_vs_baseline": -2.0}, {"deaths": 14215, "baseline": 15008, "pct_vs_baseline": -5.3}, {"deaths": 15069, "baseline": 14871, "pct_vs_baseline": 1.3}, {"deaths": 14291, "baseline": 15124, "pct_vs_baseline": -5.5}, {"deaths": 14991, "baseline": 15343, "pct_vs_baseline": -2.3}, {"deaths": 13832, "baseline": 15232, "pct_vs_baseline": -9.2}, {"deaths": 14461, "baseline": 15513, "pct_vs_baseline": -6.8}, {"deaths": 15091, "baseline": 16065, "pct_vs_baseline": -6.1}, {"deaths": 14193, "baseline": 14936, "pct_vs_baseline": -5.0}, {"deaths": 15068, "baseline": 14635, "pct_vs_baseline": 3.0}, {"deaths": 14807, "baseline": 14733, "pct_vs_baseline": 0.5}, {"deaths": 14079, "baseline": 14911, "pct_vs_baseline": -5.6}, {"deaths": 14323, "baseline": 15011, "pct_vs_baseline": -4.6}, {"deaths": 14531, "baseline": 15143, "pct_vs_baseline": -4.0}, {"deaths": 14882, "baseline": 15224, "pct_vs_baseline": -2.2}, {"deaths": 14972, "baseline": 15496, "pct_vs_baseline": -3.4}, {"deaths": 15427, "baseline": 15540, "pct_vs_baseline": -0.7}, {"deaths": 15485, "baseline": 15841, "pct_vs_baseline": -2.2}, {"deaths": 15149, "baseline": 15772, "pct_vs_baseline": -4.0}, {"deaths": 15314, "baseline": 15592, "pct_vs_baseline": -1.8}, {"deaths": 15611, "baseline": 16051, "pct_vs_baseline": -2.7}, {"deaths": 16280, "baseline": 16063, "pct_vs_baseline": 1.4}, {"deaths": 16866, "baseline": 15964, "pct_vs_baseline": 5.6}, {"deaths": 16356, "baseline": 16014, "pct_vs_baseline": 2.1}, {"deaths": 16686, "baseline": 16516, "pct_vs_baseline": 1.0}, {"deaths": 16500, "baseline": 16965, "pct_vs_baseline": -2.7}, {"deaths": 16825, "baseline": 17397, "pct_vs_baseline": -3.3}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 16671, "baseline": 17400, "pct_vs_baseline": -4.2}, {"deaths": 16649, "baseline": 17132, "pct_vs_baseline": -2.8}, {"deaths": 16991, "baseline": 17023, "pct_vs_baseline": -0.2}, {"deaths": 16716, "baseline": 17027, "pct_vs_baseline": -1.8}, {"deaths": 16884, "baseline": 16870, "pct_vs_baseline": 0.1}, {"deaths": 16905, "baseline": 16972, "pct_vs_baseline": -0.4}, {"deaths": 16746, "baseline": 16816, "pct_vs_baseline": -0.4}, {"deaths": 16307, "baseline": 17354, "pct_vs_baseline": -6.0}, {"deaths": 16820, "baseline": 18120, "pct_vs_baseline": -7.2}, {"deaths": 16612, "baseline": 18040, "pct_vs_baseline": -7.9}, {"deaths": 16396, "baseline": 17835, "pct_vs_baseline": -8.1}, {"deaths": 16622, "baseline": 17279, "pct_vs_baseline": -3.8}, {"deaths": 16645, "baseline": 16519, "pct_vs_baseline": 0.8}, {"deaths": 16113, "baseline": 16630, "pct_vs_baseline": -3.1}, {"deaths": 16065, "baseline": 16238, "pct_vs_baseline": -1.1}, {"deaths": 15688, "baseline": 16066, "pct_vs_baseline": -2.4}, {"deaths": 15575, "baseline": 15978, "pct_vs_baseline": -2.5}, {"deaths": 15740, "baseline": 15720, "pct_vs_baseline": 0.1}, {"deaths": 15982, "baseline": 15645, "pct_vs_baseline": 2.2}, {"deaths": 15156, "baseline": 15246, "pct_vs_baseline": -0.6}, {"deaths": 14745, "baseline": 15477, "pct_vs_baseline": -4.7}, {"deaths": 14934, "baseline": 15206, "pct_vs_baseline": -1.8}, {"deaths": 15320, "baseline": 15309, "pct_vs_baseline": 0.1}, {"deaths": 16247, "baseline": 15380, "pct_vs_baseline": 5.6}, {"deaths": 15310, "baseline": 15352, "pct_vs_baseline": -0.3}, {"deaths": 14754, "baseline": 14986, "pct_vs_baseline": -1.5}, {"deaths": 15984, "baseline": 14922, "pct_vs_baseline": 7.1}, {"deaths": 15101, "baseline": 14997, "pct_vs_baseline": 0.7}, {"deaths": 17233, "baseline": 15035, "pct_vs_baseline": 14.6}, {"deaths": 18052, "baseline": 15354, "pct_vs_baseline": 17.6}, {"deaths": 14896, "baseline": 15006, "pct_vs_baseline": -0.7}, {"deaths": 14468, "baseline": 15459, "pct_vs_baseline": -6.4}, {"deaths": 14940, "baseline": 15982, "pct_vs_baseline": -6.5}, {"deaths": 14636, "baseline": 14941, "pct_vs_baseline": -2.0}, {"deaths": 14690, "baseline": 14754, "pct_vs_baseline": -0.4}, {"deaths": 14889, "baseline": 14731, "pct_vs_baseline": 1.1}, {"deaths": 15626, "baseline": 14735, "pct_vs_baseline": 6.0}, {"deaths": 14983, "baseline": 14920, "pct_vs_baseline": 0.4}, {"deaths": 14537, "baseline": 15037, "pct_vs_baseline": -3.3}, {"deaths": 14172, "baseline": 15226, "pct_vs_baseline": -6.9}, {"deaths": 14751, "baseline": 15325, "pct_vs_baseline": -3.7}, {"deaths": 15486, "baseline": 15500, "pct_vs_baseline": -0.1}, {"deaths": 15289, "baseline": 15814, "pct_vs_baseline": -3.3}, {"deaths": 15128, "baseline": 15650, "pct_vs_baseline": -3.3}, {"deaths": 15693, "baseline": 15445, "pct_vs_baseline": 1.6}, {"deaths": 15508, "baseline": 15953, "pct_vs_baseline": -2.8}, {"deaths": 15469, "baseline": 16117, "pct_vs_baseline": -4.0}, {"deaths": 15421, "baseline": 16132, "pct_vs_baseline": -4.4}, {"deaths": 15846, "baseline": 16079, "pct_vs_baseline": -1.4}, {"deaths": 15700, "baseline": 16604, "pct_vs_baseline": -5.4}, {"deaths": 15974, "baseline": 17002, "pct_vs_baseline": -6.0}, {"deaths": 16163, "baseline": 17305, "pct_vs_baseline": -6.6}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 16945, "baseline": 17253, "pct_vs_baseline": -1.8}, {"deaths": 16423, "baseline": 17163, "pct_vs_baseline": -4.3}, {"deaths": 16292, "baseline": 17102, "pct_vs_baseline": -4.7}, {"deaths": 16061, "baseline": 16940, "pct_vs_baseline": -5.2}, {"deaths": 16118, "baseline": 16897, "pct_vs_baseline": -4.6}, {"deaths": 16669, "baseline": 17016, "pct_vs_baseline": -2.0}, {"deaths": 16714, "baseline": 16957, "pct_vs_baseline": -1.4}, {"deaths": 17349, "baseline": 17387, "pct_vs_baseline": -0.2}, {"deaths": 17513, "baseline": 18079, "pct_vs_baseline": -3.1}, {"deaths": 17410, "baseline": 18025, "pct_vs_baseline": -3.4}, {"deaths": 17085, "baseline": 17809, "pct_vs_baseline": -4.1}, {"deaths": 16994, "baseline": 17339, "pct_vs_baseline": -2.0}, {"deaths": 16994, "baseline": 16602, "pct_vs_baseline": 2.4}, {"deaths": 16681, "baseline": 16579, "pct_vs_baseline": 0.6}, {"deaths": 16599, "baseline": 16309, "pct_vs_baseline": 1.8}, {"deaths": 15914, "baseline": 15960, "pct_vs_baseline": -0.3}, {"deaths": 16167, "baseline": 15834, "pct_vs_baseline": 2.1}, {"deaths": 15333, "baseline": 15661, "pct_vs_baseline": -2.1}, {"deaths": 15234, "baseline": 15667, "pct_vs_baseline": -2.8}, {"deaths": 15171, "baseline": 15236, "pct_vs_baseline": -0.4}, {"deaths": 15892, "baseline": 15311, "pct_vs_baseline": 3.8}, {"deaths": 14375, "baseline": 15106, "pct_vs_baseline": -4.8}, {"deaths": 15469, "baseline": 15371, "pct_vs_baseline": 0.6}, {"deaths": 15036, "baseline": 15567, "pct_vs_baseline": -3.4}, {"deaths": 14877, "baseline": 15442, "pct_vs_baseline": -3.7}, {"deaths": 14479, "baseline": 14779, "pct_vs_baseline": -2.0}, {"deaths": 14718, "baseline": 14942, "pct_vs_baseline": -1.5}, {"deaths": 15113, "baseline": 15001, "pct_vs_baseline": 0.7}, {"deaths": 16188, "baseline": 15476, "pct_vs_baseline": 4.6}, {"deaths": 14552, "baseline": 15807, "pct_vs_baseline": -7.9}, {"deaths": 14333, "baseline": 14881, "pct_vs_baseline": -3.7}, {"deaths": 15022, "baseline": 15483, "pct_vs_baseline": -3.0}, {"deaths": 14631, "baseline": 15853, "pct_vs_baseline": -7.7}, {"deaths": 14516, "baseline": 14800, "pct_vs_baseline": -1.9}, {"deaths": 13805, "baseline": 14744, "pct_vs_baseline": -6.4}, {"deaths": 14457, "baseline": 14805, "pct_vs_baseline": -2.4}, {"deaths": 14549, "baseline": 14820, "pct_vs_baseline": -1.8}, {"deaths": 15120, "baseline": 14878, "pct_vs_baseline": 1.6}, {"deaths": 15039, "baseline": 14867, "pct_vs_baseline": 1.2}, {"deaths": 15203, "baseline": 14914, "pct_vs_baseline": 1.9}, {"deaths": 15091, "baseline": 15182, "pct_vs_baseline": -0.6}, {"deaths": 15449, "baseline": 15565, "pct_vs_baseline": -0.7}, {"deaths": 15995, "baseline": 15817, "pct_vs_baseline": 1.1}, {"deaths": 16016, "baseline": 15613, "pct_vs_baseline": 2.6}, {"deaths": 16213, "baseline": 15456, "pct_vs_baseline": 4.9}, {"deaths": 16072, "baseline": 15817, "pct_vs_baseline": 1.6}, {"deaths": 16635, "baseline": 15935, "pct_vs_baseline": 4.4}, {"deaths": 16973, "baseline": 15963, "pct_vs_baseline": 6.3}, {"deaths": 17372, "baseline": 16041, "pct_vs_baseline": 8.3}, {"deaths": 16613, "baseline": 16482, "pct_vs_baseline": 0.8}, {"deaths": 17301, "baseline": 16727, "pct_vs_baseline": 3.4}, {"deaths": 17888, "baseline": 17000, "pct_vs_baseline": 5.2}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18394, "baseline": 17199, "pct_vs_baseline": 6.9}, {"deaths": 18527, "baseline": 16983, "pct_vs_baseline": 9.1}, {"deaths": 18170, "baseline": 16949, "pct_vs_baseline": 7.2}, {"deaths": 17125, "baseline": 16695, "pct_vs_baseline": 2.6}, {"deaths": 17104, "baseline": 16818, "pct_vs_baseline": 1.7}, {"deaths": 17006, "baseline": 17082, "pct_vs_baseline": -0.4}, {"deaths": 16792, "baseline": 17064, "pct_vs_baseline": -1.6}, {"deaths": 17682, "baseline": 17483, "pct_vs_baseline": 1.1}, {"deaths": 17224, "baseline": 18223, "pct_vs_baseline": -5.5}, {"deaths": 17205, "baseline": 18080, "pct_vs_baseline": -4.8}, {"deaths": 17449, "baseline": 17797, "pct_vs_baseline": -2.0}, {"deaths": 17034, "baseline": 17350, "pct_vs_baseline": -1.8}, {"deaths": 16934, "baseline": 16659, "pct_vs_baseline": 1.7}, {"deaths": 17141, "baseline": 16471, "pct_vs_baseline": 4.1}, {"deaths": 16494, "baseline": 16197, "pct_vs_baseline": 1.8}, {"deaths": 16610, "baseline": 15854, "pct_vs_baseline": 4.8}, {"deaths": 16340, "baseline": 15791, "pct_vs_baseline": 3.5}, {"deaths": 15939, "baseline": 15545, "pct_vs_baseline": 2.5}, {"deaths": 16384, "baseline": 15507, "pct_vs_baseline": 5.7}, {"deaths": 15899, "baseline": 15133, "pct_vs_baseline": 5.1}, {"deaths": 15203, "baseline": 15430, "pct_vs_baseline": -1.5}, {"deaths": 15998, "baseline": 15010, "pct_vs_baseline": 6.6}, {"deaths": 15195, "baseline": 15324, "pct_vs_baseline": -0.8}, {"deaths": 14587, "baseline": 15511, "pct_vs_baseline": -6.0}, {"deaths": 15232, "baseline": 15100, "pct_vs_baseline": 0.9}, {"deaths": 15094, "baseline": 14715, "pct_vs_baseline": 2.6}, {"deaths": 15380, "baseline": 14898, "pct_vs_baseline": 3.2}, {"deaths": 14683, "baseline": 14962, "pct_vs_baseline": -1.9}, {"deaths": 14525, "baseline": 15775, "pct_vs_baseline": -7.9}, {"deaths": 14893, "baseline": 15735, "pct_vs_baseline": -5.4}, {"deaths": 16238, "baseline": 14524, "pct_vs_baseline": 11.8}, {"deaths": 14929, "baseline": 15567, "pct_vs_baseline": -4.1}, {"deaths": 14523, "baseline": 15753, "pct_vs_baseline": -7.8}, {"deaths": 14616, "baseline": 14615, "pct_vs_baseline": 0.0}, {"deaths": 14669, "baseline": 14487, "pct_vs_baseline": 1.3}, {"deaths": 15009, "baseline": 14767, "pct_vs_baseline": 1.6}, {"deaths": 14705, "baseline": 14776, "pct_vs_baseline": -0.5}, {"deaths": 14699, "baseline": 14907, "pct_vs_baseline": -1.4}, {"deaths": 15288, "baseline": 14781, "pct_vs_baseline": 3.4}, {"deaths": 15631, "baseline": 14856, "pct_vs_baseline": 5.2}, {"deaths": 15888, "baseline": 15032, "pct_vs_baseline": 5.7}, {"deaths": 15607, "baseline": 15412, "pct_vs_baseline": 1.3}, {"deaths": 15762, "baseline": 15717, "pct_vs_baseline": 0.3}, {"deaths": 15862, "baseline": 15623, "pct_vs_baseline": 1.5}, {"deaths": 15850, "baseline": 15503, "pct_vs_baseline": 2.2}, {"deaths": 15847, "baseline": 15729, "pct_vs_baseline": 0.8}, {"deaths": 16166, "baseline": 15997, "pct_vs_baseline": 1.1}, {"deaths": 16520, "baseline": 16103, "pct_vs_baseline": 2.6}, {"deaths": 16983, "baseline": 16195, "pct_vs_baseline": 4.9}, {"deaths": 17281, "baseline": 16299, "pct_vs_baseline": 6.0}, {"deaths": 17373, "baseline": 16540, "pct_vs_baseline": 5.0}, {"deaths": 17547, "baseline": 16910, "pct_vs_baseline": 3.8}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18590, "baseline": 17231, "pct_vs_baseline": 7.9}, {"deaths": 19982, "baseline": 17036, "pct_vs_baseline": 17.3}, {"deaths": 20899, "baseline": 17011, "pct_vs_baseline": 22.9}, {"deaths": 21096, "baseline": 16619, "pct_vs_baseline": 26.9}, {"deaths": 19970, "baseline": 16792, "pct_vs_baseline": 18.9}, {"deaths": 20405, "baseline": 17008, "pct_vs_baseline": 20.0}, {"deaths": 19496, "baseline": 16971, "pct_vs_baseline": 14.9}, {"deaths": 18792, "baseline": 17298, "pct_vs_baseline": 8.6}, {"deaths": 18241, "baseline": 17609, "pct_vs_baseline": 3.6}, {"deaths": 17926, "baseline": 17506, "pct_vs_baseline": 2.4}, {"deaths": 17164, "baseline": 17459, "pct_vs_baseline": -1.7}, {"deaths": 16844, "baseline": 17108, "pct_vs_baseline": -1.5}, {"deaths": 16811, "baseline": 16512, "pct_vs_baseline": 1.8}, {"deaths": 16660, "baseline": 16525, "pct_vs_baseline": 0.8}, {"deaths": 16531, "baseline": 16201, "pct_vs_baseline": 2.0}, {"deaths": 15801, "baseline": 15900, "pct_vs_baseline": -0.6}, {"deaths": 15656, "baseline": 15850, "pct_vs_baseline": -1.2}, {"deaths": 15530, "baseline": 15618, "pct_vs_baseline": -0.6}, {"deaths": 15422, "baseline": 15650, "pct_vs_baseline": -1.5}, {"deaths": 15258, "baseline": 15305, "pct_vs_baseline": -0.3}, {"deaths": 15368, "baseline": 15395, "pct_vs_baseline": -0.2}, {"deaths": 15491, "baseline": 15074, "pct_vs_baseline": 2.8}, {"deaths": 14989, "baseline": 15082, "pct_vs_baseline": -0.6}, {"deaths": 15140, "baseline": 15354, "pct_vs_baseline": -1.4}, {"deaths": 14931, "baseline": 15226, "pct_vs_baseline": -1.9}, {"deaths": 15358, "baseline": 14706, "pct_vs_baseline": 4.4}, {"deaths": 15893, "baseline": 15000, "pct_vs_baseline": 6.0}, {"deaths": 14657, "baseline": 14894, "pct_vs_baseline": -1.6}, {"deaths": 14914, "baseline": 15441, "pct_vs_baseline": -3.4}, {"deaths": 14754, "baseline": 15507, "pct_vs_baseline": -4.9}, {"deaths": 14787, "baseline": 14754, "pct_vs_baseline": 0.2}, {"deaths": 15000, "baseline": 14892, "pct_vs_baseline": 0.7}, {"deaths": 14648, "baseline": 14896, "pct_vs_baseline": -1.7}, {"deaths": 14714, "baseline": 14489, "pct_vs_baseline": 1.6}, {"deaths": 14398, "baseline": 14506, "pct_vs_baseline": -0.7}, {"deaths": 14575, "baseline": 14760, "pct_vs_baseline": -1.3}, {"deaths": 14592, "baseline": 14762, "pct_vs_baseline": -1.2}, {"deaths": 14912, "baseline": 14751, "pct_vs_baseline": 1.1}, {"deaths": 14896, "baseline": 14842, "pct_vs_baseline": 0.4}, {"deaths": 14999, "baseline": 14997, "pct_vs_baseline": 0.0}, {"deaths": 15562, "baseline": 15172, "pct_vs_baseline": 2.6}, {"deaths": 15469, "baseline": 15459, "pct_vs_baseline": 0.1}, {"deaths": 16375, "baseline": 15684, "pct_vs_baseline": 4.4}, {"deaths": 15732, "baseline": 15535, "pct_vs_baseline": 1.3}, {"deaths": 16374, "baseline": 15565, "pct_vs_baseline": 5.2}, {"deaths": 16372, "baseline": 15730, "pct_vs_baseline": 4.1}, {"deaths": 16371, "baseline": 16101, "pct_vs_baseline": 1.7}, {"deaths": 16225, "baseline": 16357, "pct_vs_baseline": -0.8}, {"deaths": 16338, "baseline": 16496, "pct_vs_baseline": -1.0}, {"deaths": 16343, "baseline": 16472, "pct_vs_baseline": -0.8}, {"deaths": 17004, "baseline": 16732, "pct_vs_baseline": 1.6}, {"deaths": 17812, "baseline": 17057, "pct_vs_baseline": 4.4}, {"deaths": 17466, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 17560, "baseline": 17520, "pct_vs_baseline": 0.2}, {"deaths": 17776, "baseline": 17588, "pct_vs_baseline": 1.1}, {"deaths": 17309, "baseline": 17771, "pct_vs_baseline": -2.6}, {"deaths": 17455, "baseline": 17517, "pct_vs_baseline": -0.4}, {"deaths": 17590, "baseline": 17387, "pct_vs_baseline": 1.2}, {"deaths": 17701, "baseline": 17723, "pct_vs_baseline": -0.1}, {"deaths": 18077, "baseline": 17606, "pct_vs_baseline": 2.7}, {"deaths": 17898, "baseline": 17831, "pct_vs_baseline": 0.4}, {"deaths": 17215, "baseline": 17938, "pct_vs_baseline": -4.0}, {"deaths": 17387, "baseline": 17788, "pct_vs_baseline": -2.3}, {"deaths": 17683, "baseline": 17466, "pct_vs_baseline": 1.2}, {"deaths": 16831, "baseline": 17063, "pct_vs_baseline": -1.4}, {"deaths": 16452, "baseline": 16748, "pct_vs_baseline": -1.8}, {"deaths": 16025, "baseline": 16578, "pct_vs_baseline": -3.3}, {"deaths": 16200, "baseline": 16371, "pct_vs_baseline": -1.0}, {"deaths": 16367, "baseline": 15912, "pct_vs_baseline": 2.9}, {"deaths": 16356, "baseline": 15871, "pct_vs_baseline": 3.1}, {"deaths": 15795, "baseline": 15594, "pct_vs_baseline": 1.3}, {"deaths": 15778, "baseline": 15692, "pct_vs_baseline": 0.6}, {"deaths": 15788, "baseline": 15375, "pct_vs_baseline": 2.7}, {"deaths": 16029, "baseline": 15494, "pct_vs_baseline": 3.5}, {"deaths": 15497, "baseline": 15185, "pct_vs_baseline": 2.1}, {"deaths": 15919, "baseline": 15044, "pct_vs_baseline": 5.8}, {"deaths": 15106, "baseline": 15230, "pct_vs_baseline": -0.8}, {"deaths": 15514, "baseline": 15264, "pct_vs_baseline": 1.6}, {"deaths": 17346, "baseline": 14869, "pct_vs_baseline": 16.7}, {"deaths": 16982, "baseline": 15238, "pct_vs_baseline": 11.4}, {"deaths": 18026, "baseline": 14925, "pct_vs_baseline": 20.8}, {"deaths": 15543, "baseline": 15430, "pct_vs_baseline": 0.7}, {"deaths": 14864, "baseline": 15448, "pct_vs_baseline": -3.8}, {"deaths": 15097, "baseline": 14817, "pct_vs_baseline": 1.9}, {"deaths": 15406, "baseline": 14776, "pct_vs_baseline": 4.3}, {"deaths": 15362, "baseline": 14767, "pct_vs_baseline": 4.0}, {"deaths": 15215, "baseline": 14535, "pct_vs_baseline": 4.7}, {"deaths": 14979, "baseline": 14526, "pct_vs_baseline": 3.1}, {"deaths": 15603, "baseline": 14747, "pct_vs_baseline": 5.8}, {"deaths": 15464, "baseline": 14710, "pct_vs_baseline": 5.1}, {"deaths": 16031, "baseline": 14807, "pct_vs_baseline": 8.3}, {"deaths": 15621, "baseline": 14858, "pct_vs_baseline": 5.1}, {"deaths": 16086, "baseline": 14977, "pct_vs_baseline": 7.4}, {"deaths": 15909, "baseline": 15253, "pct_vs_baseline": 4.3}, {"deaths": 16061, "baseline": 15488, "pct_vs_baseline": 3.7}, {"deaths": 16457, "baseline": 15781, "pct_vs_baseline": 4.3}, {"deaths": 15981, "baseline": 15577, "pct_vs_baseline": 2.6}, {"deaths": 16316, "baseline": 15889, "pct_vs_baseline": 2.7}, {"deaths": 16002, "baseline": 15882, "pct_vs_baseline": 0.8}, {"deaths": 16553, "baseline": 16184, "pct_vs_baseline": 2.3}, {"deaths": 17065, "baseline": 16401, "pct_vs_baseline": 4.0}, {"deaths": 17781, "baseline": 16579, "pct_vs_baseline": 7.3}, {"deaths": 17683, "baseline": 16525, "pct_vs_baseline": 7.0}, {"deaths": 18030, "baseline": 16830, "pct_vs_baseline": 7.1}, {"deaths": 17882, "baseline": 17247, "pct_vs_baseline": 3.7}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18087, "baseline": 17632, "pct_vs_baseline": 2.6}, {"deaths": 17495, "baseline": 17871, "pct_vs_baseline": -2.1}, {"deaths": 16652, "baseline": 17932, "pct_vs_baseline": -7.1}, {"deaths": 16909, "baseline": 17691, "pct_vs_baseline": -4.4}, {"deaths": 17681, "baseline": 17533, "pct_vs_baseline": 0.8}, {"deaths": 17346, "baseline": 17737, "pct_vs_baseline": -2.2}, {"deaths": 17294, "baseline": 17565, "pct_vs_baseline": -1.5}, {"deaths": 17237, "baseline": 17606, "pct_vs_baseline": -2.1}, {"deaths": 17266, "baseline": 17403, "pct_vs_baseline": -0.8}, {"deaths": 17722, "baseline": 17308, "pct_vs_baseline": 2.4}, {"deaths": 17345, "baseline": 17155, "pct_vs_baseline": 1.1}, {"deaths": 17057, "baseline": 16865, "pct_vs_baseline": 1.1}, {"deaths": 17410, "baseline": 16767, "pct_vs_baseline": 3.8}, {"deaths": 15935, "baseline": 16524, "pct_vs_baseline": -3.6}, {"deaths": 16158, "baseline": 16378, "pct_vs_baseline": -1.3}, {"deaths": 16907, "baseline": 16076, "pct_vs_baseline": 5.2}, {"deaths": 16048, "baseline": 16019, "pct_vs_baseline": 0.2}, {"deaths": 16171, "baseline": 15667, "pct_vs_baseline": 3.2}, {"deaths": 16306, "baseline": 15760, "pct_vs_baseline": 3.5}, {"deaths": 15978, "baseline": 15454, "pct_vs_baseline": 3.4}, {"deaths": 15270, "baseline": 15447, "pct_vs_baseline": -1.1}, {"deaths": 15698, "baseline": 15259, "pct_vs_baseline": 2.9}, {"deaths": 15239, "baseline": 15378, "pct_vs_baseline": -0.9}, {"deaths": 15209, "baseline": 15223, "pct_vs_baseline": -0.1}, {"deaths": 14879, "baseline": 15173, "pct_vs_baseline": -1.9}, {"deaths": 15322, "baseline": 15406, "pct_vs_baseline": -0.5}, {"deaths": 15503, "baseline": 15791, "pct_vs_baseline": -1.8}, {"deaths": 15228, "baseline": 15516, "pct_vs_baseline": -1.9}, {"deaths": 14783, "baseline": 15681, "pct_vs_baseline": -5.7}, {"deaths": 14976, "baseline": 15423, "pct_vs_baseline": -2.9}, {"deaths": 15920, "baseline": 15070, "pct_vs_baseline": 5.6}, {"deaths": 15104, "baseline": 14965, "pct_vs_baseline": 0.9}, {"deaths": 15348, "baseline": 14821, "pct_vs_baseline": 3.6}, {"deaths": 15887, "baseline": 14739, "pct_vs_baseline": 7.8}, {"deaths": 15125, "baseline": 14508, "pct_vs_baseline": 4.3}, {"deaths": 15109, "baseline": 14907, "pct_vs_baseline": 1.4}, {"deaths": 14887, "baseline": 14987, "pct_vs_baseline": -0.7}, {"deaths": 15139, "baseline": 15149, "pct_vs_baseline": -0.1}, {"deaths": 15539, "baseline": 15076, "pct_vs_baseline": 3.1}, {"deaths": 15576, "baseline": 15218, "pct_vs_baseline": 2.4}, {"deaths": 15999, "baseline": 15440, "pct_vs_baseline": 3.6}, {"deaths": 16371, "baseline": 15614, "pct_vs_baseline": 4.8}, {"deaths": 17142, "baseline": 15976, "pct_vs_baseline": 7.3}, {"deaths": 16736, "baseline": 15744, "pct_vs_baseline": 6.3}, {"deaths": 16378, "baseline": 16089, "pct_vs_baseline": 1.8}, {"deaths": 16914, "baseline": 15960, "pct_vs_baseline": 6.0}, {"deaths": 16916, "baseline": 16239, "pct_vs_baseline": 4.2}, {"deaths": 17539, "baseline": 16441, "pct_vs_baseline": 6.7}, {"deaths": 17688, "baseline": 16864, "pct_vs_baseline": 4.9}, {"deaths": 17806, "baseline": 16724, "pct_vs_baseline": 6.5}, {"deaths": 17798, "baseline": 17136, "pct_vs_baseline": 3.9}, {"deaths": 17723, "baseline": 17458, "pct_vs_baseline": 1.5}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 17762, "baseline": 17915, "pct_vs_baseline": -0.9}, {"deaths": 17145, "baseline": 18041, "pct_vs_baseline": -5.0}, {"deaths": 17454, "baseline": 17864, "pct_vs_baseline": -2.3}, {"deaths": 16919, "baseline": 17729, "pct_vs_baseline": -4.6}, {"deaths": 17631, "baseline": 17693, "pct_vs_baseline": -0.3}, {"deaths": 18370, "baseline": 17825, "pct_vs_baseline": 3.1}, {"deaths": 18914, "baseline": 17675, "pct_vs_baseline": 7.0}, {"deaths": 18629, "baseline": 17792, "pct_vs_baseline": 4.7}, {"deaths": 18149, "baseline": 17492, "pct_vs_baseline": 3.8}, {"deaths": 17956, "baseline": 17530, "pct_vs_baseline": 2.4}, {"deaths": 17957, "baseline": 17345, "pct_vs_baseline": 3.5}, {"deaths": 17341, "baseline": 16952, "pct_vs_baseline": 2.3}, {"deaths": 17111, "baseline": 16920, "pct_vs_baseline": 1.1}, {"deaths": 17527, "baseline": 16488, "pct_vs_baseline": 6.3}, {"deaths": 16912, "baseline": 16396, "pct_vs_baseline": 3.1}, {"deaths": 17109, "baseline": 16320, "pct_vs_baseline": 4.8}, {"deaths": 16974, "baseline": 16113, "pct_vs_baseline": 5.3}, {"deaths": 16563, "baseline": 15754, "pct_vs_baseline": 5.1}, {"deaths": 15936, "baseline": 15825, "pct_vs_baseline": 0.7}, {"deaths": 15807, "baseline": 15619, "pct_vs_baseline": 1.2}, {"deaths": 16533, "baseline": 15552, "pct_vs_baseline": 6.3}, {"deaths": 15507, "baseline": 15412, "pct_vs_baseline": 0.6}, {"deaths": 15560, "baseline": 15362, "pct_vs_baseline": 1.3}, {"deaths": 15398, "baseline": 15016, "pct_vs_baseline": 2.5}, {"deaths": 15550, "baseline": 15087, "pct_vs_baseline": 3.1}, {"deaths": 15693, "baseline": 15520, "pct_vs_baseline": 1.1}, {"deaths": 15832, "baseline": 15695, "pct_vs_baseline": 0.9}, {"deaths": 14882, "baseline": 15541, "pct_vs_baseline": -4.2}, {"deaths": 15026, "baseline": 15191, "pct_vs_baseline": -1.1}, {"deaths": 16293, "baseline": 14808, "pct_vs_baseline": 10.0}, {"deaths": 15437, "baseline": 15275, "pct_vs_baseline": 1.1}, {"deaths": 14639, "baseline": 15092, "pct_vs_baseline": -3.0}, {"deaths": 15597, "baseline": 14902, "pct_vs_baseline": 4.7}, {"deaths": 16455, "baseline": 14990, "pct_vs_baseline": 9.8}, {"deaths": 14688, "baseline": 14595, "pct_vs_baseline": 0.6}, {"deaths": 14983, "baseline": 14951, "pct_vs_baseline": 0.2}, {"deaths": 15494, "baseline": 14839, "pct_vs_baseline": 4.4}, {"deaths": 15553, "baseline": 15180, "pct_vs_baseline": 2.5}, {"deaths": 15974, "baseline": 15277, "pct_vs_baseline": 4.6}, {"deaths": 15818, "baseline": 15499, "pct_vs_baseline": 2.1}, {"deaths": 16254, "baseline": 15690, "pct_vs_baseline": 3.6}, {"deaths": 16775, "baseline": 15791, "pct_vs_baseline": 6.2}, {"deaths": 16356, "baseline": 16346, "pct_vs_baseline": 0.1}, {"deaths": 17020, "baseline": 16065, "pct_vs_baseline": 5.9}, {"deaths": 16844, "baseline": 16226, "pct_vs_baseline": 3.8}, {"deaths": 16774, "baseline": 16241, "pct_vs_baseline": 3.3}, {"deaths": 16919, "baseline": 16528, "pct_vs_baseline": 2.4}, {"deaths": 17074, "baseline": 16864, "pct_vs_baseline": 1.2}, {"deaths": 17403, "baseline": 17232, "pct_vs_baseline": 1.0}, {"deaths": 18104, "baseline": 17145, "pct_vs_baseline": 5.6}, {"deaths": 17986, "baseline": 17501, "pct_vs_baseline": 2.8}, {"deaths": 17835, "baseline": 17770, "pct_vs_baseline": 0.4}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18243, "baseline": 18079, "pct_vs_baseline": 0.9}, {"deaths": 17933, "baseline": 18185, "pct_vs_baseline": -1.4}, {"deaths": 18251, "baseline": 18097, "pct_vs_baseline": 0.9}, {"deaths": 18861, "baseline": 17901, "pct_vs_baseline": 5.4}, {"deaths": 19980, "baseline": 17995, "pct_vs_baseline": 11.0}, {"deaths": 20026, "baseline": 18166, "pct_vs_baseline": 10.2}, {"deaths": 20373, "baseline": 18115, "pct_vs_baseline": 12.5}, {"deaths": 20776, "baseline": 18048, "pct_vs_baseline": 15.1}, {"deaths": 21250, "baseline": 17619, "pct_vs_baseline": 20.6}, {"deaths": 21172, "baseline": 17639, "pct_vs_baseline": 20.0}, {"deaths": 20197, "baseline": 17520, "pct_vs_baseline": 15.3}, {"deaths": 19789, "baseline": 17021, "pct_vs_baseline": 16.3}, {"deaths": 19320, "baseline": 16944, "pct_vs_baseline": 14.0}, {"deaths": 19293, "baseline": 16658, "pct_vs_baseline": 15.8}, {"deaths": 19390, "baseline": 16459, "pct_vs_baseline": 17.8}, {"deaths": 18064, "baseline": 16559, "pct_vs_baseline": 9.1}, {"deaths": 17101, "baseline": 16275, "pct_vs_baseline": 5.1}, {"deaths": 16408, "baseline": 16000, "pct_vs_baseline": 2.6}, {"deaths": 16370, "baseline": 15965, "pct_vs_baseline": 2.5}, {"deaths": 16083, "baseline": 15746, "pct_vs_baseline": 2.1}, {"deaths": 15601, "baseline": 15681, "pct_vs_baseline": -0.5}, {"deaths": 16351, "baseline": 15638, "pct_vs_baseline": 4.6}, {"deaths": 16198, "baseline": 15380, "pct_vs_baseline": 5.3}, {"deaths": 15888, "baseline": 15088, "pct_vs_baseline": 5.3}, {"deaths": 17153, "baseline": 15221, "pct_vs_baseline": 12.7}, {"deaths": 14870, "baseline": 15763, "pct_vs_baseline": -5.7}, {"deaths": 15614, "baseline": 15918, "pct_vs_baseline": -1.9}, {"deaths": 15238, "baseline": 15495, "pct_vs_baseline": -1.7}, {"deaths": 15856, "baseline": 14958, "pct_vs_baseline": 6.0}, {"deaths": 16853, "baseline": 15156, "pct_vs_baseline": 11.2}, {"deaths": 16077, "baseline": 15496, "pct_vs_baseline": 3.8}, {"deaths": 15263, "baseline": 15016, "pct_vs_baseline": 1.6}, {"deaths": 15226, "baseline": 15096, "pct_vs_baseline": 0.9}, {"deaths": 15182, "baseline": 15377, "pct_vs_baseline": -1.3}, {"deaths": 15176, "baseline": 14772, "pct_vs_baseline": 2.7}, {"deaths": 15631, "baseline": 15056, "pct_vs_baseline": 3.8}, {"deaths": 14680, "baseline": 15028, "pct_vs_baseline": -2.3}, {"deaths": 15312, "baseline": 15267, "pct_vs_baseline": 0.3}, {"deaths": 15719, "baseline": 15464, "pct_vs_baseline": 1.7}, {"deaths": 15894, "baseline": 15622, "pct_vs_baseline": 1.7}, {"deaths": 15939, "baseline": 15922, "pct_vs_baseline": 0.1}, {"deaths": 16238, "baseline": 16057, "pct_vs_baseline": 1.1}, {"deaths": 16754, "baseline": 16418, "pct_vs_baseline": 2.0}, {"deaths": 15950, "baseline": 16266, "pct_vs_baseline": -1.9}, {"deaths": 16227, "baseline": 16352, "pct_vs_baseline": -0.8}, {"deaths": 16185, "baseline": 16382, "pct_vs_baseline": -1.2}, {"deaths": 16720, "baseline": 16585, "pct_vs_baseline": 0.8}, {"deaths": 16527, "baseline": 16885, "pct_vs_baseline": -2.1}, {"deaths": 17198, "baseline": 17239, "pct_vs_baseline": -0.2}, {"deaths": 17036, "baseline": 17443, "pct_vs_baseline": -2.3}, {"deaths": 17306, "baseline": 17638, "pct_vs_baseline": -1.9}, {"deaths": 17080, "baseline": 17760, "pct_vs_baseline": -3.8}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 16785, "baseline": 18048, "pct_vs_baseline": -7.0}, {"deaths": 17210, "baseline": 18066, "pct_vs_baseline": -4.7}, {"deaths": 16814, "baseline": 18113, "pct_vs_baseline": -7.2}, {"deaths": 16825, "baseline": 18248, "pct_vs_baseline": -7.8}, {"deaths": 17366, "baseline": 18570, "pct_vs_baseline": -6.5}, {"deaths": 17534, "baseline": 18770, "pct_vs_baseline": -6.6}, {"deaths": 17422, "baseline": 18831, "pct_vs_baseline": -7.5}, {"deaths": 17211, "baseline": 18666, "pct_vs_baseline": -7.8}, {"deaths": 17345, "baseline": 18424, "pct_vs_baseline": -5.9}, {"deaths": 17449, "baseline": 18433, "pct_vs_baseline": -5.3}, {"deaths": 17491, "baseline": 18069, "pct_vs_baseline": -3.2}, {"deaths": 17579, "baseline": 17572, "pct_vs_baseline": 0.0}, {"deaths": 17418, "baseline": 17421, "pct_vs_baseline": -0.0}, {"deaths": 17541, "baseline": 17088, "pct_vs_baseline": 2.7}, {"deaths": 16746, "baseline": 17038, "pct_vs_baseline": -1.7}, {"deaths": 16540, "baseline": 16850, "pct_vs_baseline": -1.8}, {"deaths": 16550, "baseline": 16427, "pct_vs_baseline": 0.7}, {"deaths": 15803, "baseline": 16093, "pct_vs_baseline": -1.8}, {"deaths": 16074, "baseline": 15962, "pct_vs_baseline": 0.7}, {"deaths": 15763, "baseline": 15783, "pct_vs_baseline": -0.1}, {"deaths": 16453, "baseline": 15760, "pct_vs_baseline": 4.4}, {"deaths": 15211, "baseline": 15709, "pct_vs_baseline": -3.2}, {"deaths": 16215, "baseline": 15581, "pct_vs_baseline": 4.1}, {"deaths": 16176, "baseline": 15348, "pct_vs_baseline": 5.4}, {"deaths": 15268, "baseline": 15605, "pct_vs_baseline": -2.2}, {"deaths": 15583, "baseline": 15718, "pct_vs_baseline": -0.9}, {"deaths": 16029, "baseline": 15965, "pct_vs_baseline": 0.4}, {"deaths": 15845, "baseline": 15606, "pct_vs_baseline": 1.5}, {"deaths": 16631, "baseline": 15224, "pct_vs_baseline": 9.2}, {"deaths": 16370, "baseline": 15548, "pct_vs_baseline": 5.3}, {"deaths": 15793, "baseline": 15464, "pct_vs_baseline": 2.1}, {"deaths": 15435, "baseline": 15082, "pct_vs_baseline": 2.3}, {"deaths": 15011, "baseline": 15236, "pct_vs_baseline": -1.5}, {"deaths": 15526, "baseline": 15491, "pct_vs_baseline": 0.2}, {"deaths": 15938, "baseline": 14873, "pct_vs_baseline": 7.2}, {"deaths": 16260, "baseline": 15180, "pct_vs_baseline": 7.1}, {"deaths": 15840, "baseline": 15023, "pct_vs_baseline": 5.4}, {"deaths": 16075, "baseline": 15389, "pct_vs_baseline": 4.5}, {"deaths": 15692, "baseline": 15550, "pct_vs_baseline": 0.9}, {"deaths": 16115, "baseline": 15675, "pct_vs_baseline": 2.8}, {"deaths": 16412, "baseline": 15933, "pct_vs_baseline": 3.0}, {"deaths": 16424, "baseline": 16183, "pct_vs_baseline": 1.5}, {"deaths": 16415, "baseline": 16617, "pct_vs_baseline": -1.2}, {"deaths": 16750, "baseline": 16284, "pct_vs_baseline": 2.9}, {"deaths": 17013, "baseline": 16428, "pct_vs_baseline": 3.6}, {"deaths": 17288, "baseline": 16449, "pct_vs_baseline": 5.1}, {"deaths": 17062, "baseline": 16696, "pct_vs_baseline": 2.2}, {"deaths": 17499, "baseline": 16886, "pct_vs_baseline": 3.6}, {"deaths": 17964, "baseline": 17282, "pct_vs_baseline": 3.9}, {"deaths": 18635, "baseline": 17394, "pct_vs_baseline": 7.1}, {"deaths": 18378, "baseline": 17625, "pct_vs_baseline": 4.3}, {"deaths": 18139, "baseline": 17666, "pct_vs_baseline": 2.7}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18713, "baseline": 17687, "pct_vs_baseline": 5.8}, {"deaths": 19283, "baseline": 17512, "pct_vs_baseline": 10.1}, {"deaths": 19500, "baseline": 17296, "pct_vs_baseline": 12.7}, {"deaths": 19346, "baseline": 17394, "pct_vs_baseline": 11.2}, {"deaths": 20716, "baseline": 18050, "pct_vs_baseline": 14.8}, {"deaths": 20905, "baseline": 18195, "pct_vs_baseline": 14.9}, {"deaths": 22395, "baseline": 18416, "pct_vs_baseline": 21.6}, {"deaths": 23264, "baseline": 18350, "pct_vs_baseline": 26.8}, {"deaths": 23598, "baseline": 18245, "pct_vs_baseline": 29.3}, {"deaths": 22002, "baseline": 18337, "pct_vs_baseline": 20.0}, {"deaths": 20770, "baseline": 18135, "pct_vs_baseline": 14.5}, {"deaths": 20009, "baseline": 17719, "pct_vs_baseline": 12.9}, {"deaths": 19106, "baseline": 17542, "pct_vs_baseline": 8.9}, {"deaths": 18668, "baseline": 17264, "pct_vs_baseline": 8.1}, {"deaths": 18089, "baseline": 17081, "pct_vs_baseline": 5.9}, {"deaths": 18116, "baseline": 16997, "pct_vs_baseline": 6.6}, {"deaths": 17668, "baseline": 16606, "pct_vs_baseline": 6.4}, {"deaths": 17114, "baseline": 16148, "pct_vs_baseline": 6.0}, {"deaths": 17072, "baseline": 16093, "pct_vs_baseline": 6.1}, {"deaths": 16732, "baseline": 15884, "pct_vs_baseline": 5.3}, {"deaths": 16330, "baseline": 15977, "pct_vs_baseline": 2.2}, {"deaths": 16200, "baseline": 15653, "pct_vs_baseline": 3.5}, {"deaths": 16777, "baseline": 15826, "pct_vs_baseline": 6.0}, {"deaths": 16272, "baseline": 15555, "pct_vs_baseline": 4.6}, {"deaths": 15619, "baseline": 15673, "pct_vs_baseline": -0.3}, {"deaths": 16152, "baseline": 15763, "pct_vs_baseline": 2.5}, {"deaths": 19252, "baseline": 15992, "pct_vs_baseline": 20.4}, {"deaths": 17361, "baseline": 15844, "pct_vs_baseline": 9.6}, {"deaths": 16447, "baseline": 15568, "pct_vs_baseline": 5.6}, {"deaths": 16272, "baseline": 15871, "pct_vs_baseline": 2.5}, {"deaths": 15432, "baseline": 15665, "pct_vs_baseline": -1.5}, {"deaths": 16651, "baseline": 15169, "pct_vs_baseline": 9.8}, {"deaths": 16881, "baseline": 15309, "pct_vs_baseline": 10.3}, {"deaths": 15233, "baseline": 15653, "pct_vs_baseline": -2.7}, {"deaths": 16117, "baseline": 15181, "pct_vs_baseline": 6.2}, {"deaths": 15654, "baseline": 15517, "pct_vs_baseline": 0.9}, {"deaths": 15952, "baseline": 15273, "pct_vs_baseline": 4.4}, {"deaths": 16034, "baseline": 15622, "pct_vs_baseline": 2.6}, {"deaths": 15667, "baseline": 15709, "pct_vs_baseline": -0.3}, {"deaths": 16429, "baseline": 15898, "pct_vs_baseline": 3.3}, {"deaths": 16776, "baseline": 16103, "pct_vs_baseline": 4.2}, {"deaths": 16848, "baseline": 16374, "pct_vs_baseline": 2.9}, {"deaths": 17341, "baseline": 16625, "pct_vs_baseline": 4.3}, {"deaths": 16795, "baseline": 16487, "pct_vs_baseline": 1.9}, {"deaths": 17024, "baseline": 16556, "pct_vs_baseline": 2.8}, {"deaths": 16618, "baseline": 16633, "pct_vs_baseline": -0.1}, {"deaths": 16849, "baseline": 16834, "pct_vs_baseline": 0.1}, {"deaths": 16802, "baseline": 17141, "pct_vs_baseline": -2.0}, {"deaths": 17009, "baseline": 17607, "pct_vs_baseline": -3.4}, {"deaths": 17054, "baseline": 17853, "pct_vs_baseline": -4.5}, {"deaths": 17408, "baseline": 17900, "pct_vs_baseline": -2.7}, {"deaths": 17176, "baseline": 17732, "pct_vs_baseline": -3.1}, {"deaths": 17210, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18467, "baseline": 17918, "pct_vs_baseline": 3.1}, {"deaths": 18439, "baseline": 17813, "pct_vs_baseline": 3.5}, {"deaths": 18627, "baseline": 17734, "pct_vs_baseline": 5.0}, {"deaths": 18707, "baseline": 17772, "pct_vs_baseline": 5.3}, {"deaths": 18493, "baseline": 18675, "pct_vs_baseline": -1.0}, {"deaths": 18541, "baseline": 18836, "pct_vs_baseline": -1.6}, {"deaths": 18483, "baseline": 19280, "pct_vs_baseline": -4.1}, {"deaths": 18475, "baseline": 19423, "pct_vs_baseline": -4.9}, {"deaths": 18926, "baseline": 19522, "pct_vs_baseline": -3.1}, {"deaths": 18888, "baseline": 19260, "pct_vs_baseline": -1.9}, {"deaths": 18971, "baseline": 18752, "pct_vs_baseline": 1.2}, {"deaths": 18826, "baseline": 18355, "pct_vs_baseline": 2.6}, {"deaths": 18617, "baseline": 18073, "pct_vs_baseline": 3.0}, {"deaths": 18244, "baseline": 17793, "pct_vs_baseline": 2.5}, {"deaths": 17712, "baseline": 17459, "pct_vs_baseline": 1.4}, {"deaths": 16775, "baseline": 17347, "pct_vs_baseline": -3.3}, {"deaths": 17053, "baseline": 16868, "pct_vs_baseline": 1.1}, {"deaths": 16901, "baseline": 16412, "pct_vs_baseline": 3.0}, {"deaths": 17629, "baseline": 16352, "pct_vs_baseline": 7.8}, {"deaths": 16601, "baseline": 16073, "pct_vs_baseline": 3.3}, {"deaths": 16286, "baseline": 16037, "pct_vs_baseline": 1.6}, {"deaths": 16346, "baseline": 15793, "pct_vs_baseline": 3.5}, {"deaths": 15799, "baseline": 15998, "pct_vs_baseline": -1.2}, {"deaths": 15717, "baseline": 15789, "pct_vs_baseline": -0.5}, {"deaths": 16910, "baseline": 15694, "pct_vs_baseline": 7.7}, {"deaths": 15699, "baseline": 15524, "pct_vs_baseline": 1.1}, {"deaths": 16229, "baseline": 16446, "pct_vs_baseline": -1.3}, {"deaths": 16172, "baseline": 15711, "pct_vs_baseline": 2.9}, {"deaths": 16985, "baseline": 15749, "pct_vs_baseline": 7.9}, {"deaths": 16157, "baseline": 16153, "pct_vs_baseline": 0.0}, {"deaths": 15439, "baseline": 15732, "pct_vs_baseline": -1.9}, {"deaths": 15487, "baseline": 15418, "pct_vs_baseline": 0.4}, {"deaths": 16258, "baseline": 15613, "pct_vs_baseline": 4.1}, {"deaths": 17147, "baseline": 15657, "pct_vs_baseline": 9.5}, {"deaths": 16101, "baseline": 15409, "pct_vs_baseline": 4.5}, {"deaths": 16116, "baseline": 15527, "pct_vs_baseline": 3.8}, {"deaths": 16372, "baseline": 15371, "pct_vs_baseline": 6.5}, {"deaths": 15606, "baseline": 15623, "pct_vs_baseline": -0.1}, {"deaths": 16336, "baseline": 15718, "pct_vs_baseline": 3.9}, {"deaths": 16352, "baseline": 15966, "pct_vs_baseline": 2.4}, {"deaths": 17427, "baseline": 16276, "pct_vs_baseline": 7.1}, {"deaths": 17599, "baseline": 16531, "pct_vs_baseline": 6.5}, {"deaths": 17586, "baseline": 16802, "pct_vs_baseline": 4.7}, {"deaths": 17580, "baseline": 16650, "pct_vs_baseline": 5.6}, {"deaths": 17782, "baseline": 16697, "pct_vs_baseline": 6.5}, {"deaths": 18591, "baseline": 16756, "pct_vs_baseline": 11.0}, {"deaths": 17911, "baseline": 16893, "pct_vs_baseline": 6.0}, {"deaths": 18146, "baseline": 17088, "pct_vs_baseline": 6.2}, {"deaths": 18793, "baseline": 17452, "pct_vs_baseline": 7.7}, {"deaths": 18885, "baseline": 17727, "pct_vs_baseline": 6.5}, {"deaths": 19376, "baseline": 17775, "pct_vs_baseline": 9.0}, {"deaths": 19744, "baseline": 17591, "pct_vs_baseline": 12.2}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 20918, "baseline": 17994, "pct_vs_baseline": 16.2}, {"deaths": 22070, "baseline": 18002, "pct_vs_baseline": 22.6}, {"deaths": 21236, "baseline": 18129, "pct_vs_baseline": 17.1}, {"deaths": 22083, "baseline": 18132, "pct_vs_baseline": 21.8}, {"deaths": 23640, "baseline": 18837, "pct_vs_baseline": 25.5}, {"deaths": 22744, "baseline": 19075, "pct_vs_baseline": 19.2}, {"deaths": 22683, "baseline": 19517, "pct_vs_baseline": 16.2}, {"deaths": 22266, "baseline": 19671, "pct_vs_baseline": 13.2}, {"deaths": 20930, "baseline": 19854, "pct_vs_baseline": 5.4}, {"deaths": 19102, "baseline": 19493, "pct_vs_baseline": -2.0}, {"deaths": 18665, "baseline": 19077, "pct_vs_baseline": -2.2}, {"deaths": 17640, "baseline": 18709, "pct_vs_baseline": -5.7}, {"deaths": 17731, "baseline": 18314, "pct_vs_baseline": -3.2}, {"deaths": 17028, "baseline": 18255, "pct_vs_baseline": -6.7}, {"deaths": 16901, "baseline": 17770, "pct_vs_baseline": -4.9}, {"deaths": 16637, "baseline": 17321, "pct_vs_baseline": -3.9}, {"deaths": 17634, "baseline": 17069, "pct_vs_baseline": 3.3}, {"deaths": 17129, "baseline": 16558, "pct_vs_baseline": 3.4}, {"deaths": 17343, "baseline": 16616, "pct_vs_baseline": 4.4}, {"deaths": 17079, "baseline": 16197, "pct_vs_baseline": 5.4}, {"deaths": 16451, "baseline": 16241, "pct_vs_baseline": 1.3}, {"deaths": 16902, "baseline": 15923, "pct_vs_baseline": 6.1}, {"deaths": 15846, "baseline": 16110, "pct_vs_baseline": -1.6}, {"deaths": 16087, "baseline": 15890, "pct_vs_baseline": 1.2}, {"deaths": 16819, "baseline": 16100, "pct_vs_baseline": 4.5}, {"deaths": 16076, "baseline": 15599, "pct_vs_baseline": 3.1}, {"deaths": 16424, "baseline": 16591, "pct_vs_baseline": -1.0}, {"deaths": 15603, "baseline": 15900, "pct_vs_baseline": -1.9}, {"deaths": 16589, "baseline": 16189, "pct_vs_baseline": 2.5}, {"deaths": 16058, "baseline": 16389, "pct_vs_baseline": -2.0}, {"deaths": 16494, "baseline": 15636, "pct_vs_baseline": 5.5}, {"deaths": 15784, "baseline": 15495, "pct_vs_baseline": 1.9}, {"deaths": 16148, "baseline": 15795, "pct_vs_baseline": 2.2}, {"deaths": 15880, "baseline": 15909, "pct_vs_baseline": -0.2}, {"deaths": 16064, "baseline": 15604, "pct_vs_baseline": 2.9}, {"deaths": 15706, "baseline": 15729, "pct_vs_baseline": -0.1}, {"deaths": 16146, "baseline": 15668, "pct_vs_baseline": 3.1}, {"deaths": 16505, "baseline": 15716, "pct_vs_baseline": 5.0}, {"deaths": 16747, "baseline": 15878, "pct_vs_baseline": 5.5}, {"deaths": 16664, "baseline": 16122, "pct_vs_baseline": 3.4}, {"deaths": 17470, "baseline": 16562, "pct_vs_baseline": 5.5}, {"deaths": 17139, "baseline": 16777, "pct_vs_baseline": 2.2}, {"deaths": 17059, "baseline": 16890, "pct_vs_baseline": 1.0}, {"deaths": 16762, "baseline": 16819, "pct_vs_baseline": -0.3}, {"deaths": 17371, "baseline": 16978, "pct_vs_baseline": 2.3}, {"deaths": 17594, "baseline": 17091, "pct_vs_baseline": 2.9}, {"deaths": 17676, "baseline": 17092, "pct_vs_baseline": 3.4}, {"deaths": 17877, "baseline": 17210, "pct_vs_baseline": 3.9}, {"deaths": 18295, "baseline": 17673, "pct_vs_baseline": 3.5}, {"deaths": 18504, "baseline": 17943, "pct_vs_baseline": 3.1}, {"deaths": 18500, "baseline": 18091, "pct_vs_baseline": 2.3}, {"deaths": 18652, "baseline": 17995, "pct_vs_baseline": 3.7}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 19342, "baseline": 18625, "pct_vs_baseline": 3.8}, {"deaths": 18770, "baseline": 18987, "pct_vs_baseline": -1.1}, {"deaths": 19187, "baseline": 18886, "pct_vs_baseline": 1.6}, {"deaths": 19171, "baseline": 19164, "pct_vs_baseline": 0.0}, {"deaths": 19558, "baseline": 20039, "pct_vs_baseline": -2.4}, {"deaths": 20086, "baseline": 19950, "pct_vs_baseline": 0.7}, {"deaths": 21254, "baseline": 20271, "pct_vs_baseline": 4.8}, {"deaths": 22888, "baseline": 20398, "pct_vs_baseline": 12.2}, {"deaths": 25535, "baseline": 20410, "pct_vs_baseline": 25.1}, {"deaths": 26777, "baseline": 19723, "pct_vs_baseline": 35.8}, {"deaths": 24385, "baseline": 19219, "pct_vs_baseline": 26.9}, {"deaths": 22777, "baseline": 18769, "pct_vs_baseline": 21.4}, {"deaths": 20906, "baseline": 18438, "pct_vs_baseline": 13.4}, {"deaths": 20038, "baseline": 18155, "pct_vs_baseline": 10.4}, {"deaths": 19165, "baseline": 17768, "pct_vs_baseline": 7.9}, {"deaths": 17992, "baseline": 17226, "pct_vs_baseline": 4.4}, {"deaths": 17093, "baseline": 17201, "pct_vs_baseline": -0.6}, {"deaths": 16789, "baseline": 16671, "pct_vs_baseline": 0.7}, {"deaths": 17226, "baseline": 16898, "pct_vs_baseline": 1.9}, {"deaths": 16488, "baseline": 16452, "pct_vs_baseline": 0.2}, {"deaths": 16513, "baseline": 16224, "pct_vs_baseline": 1.8}, {"deaths": 17039, "baseline": 16202, "pct_vs_baseline": 5.2}, {"deaths": 16714, "baseline": 16167, "pct_vs_baseline": 3.4}, {"deaths": 15582, "baseline": 16028, "pct_vs_baseline": -2.8}, {"deaths": 15843, "baseline": 16354, "pct_vs_baseline": -3.1}, {"deaths": 16569, "baseline": 15676, "pct_vs_baseline": 5.7}, {"deaths": 16622, "baseline": 16710, "pct_vs_baseline": -0.5}, {"deaths": 16070, "baseline": 16044, "pct_vs_baseline": 0.2}, {"deaths": 16702, "baseline": 16502, "pct_vs_baseline": 1.2}, {"deaths": 18340, "baseline": 16342, "pct_vs_baseline": 12.2}, {"deaths": 20371, "baseline": 15847, "pct_vs_baseline": 28.5}, {"deaths": 18478, "baseline": 15724, "pct_vs_baseline": 17.5}, {"deaths": 16890, "baseline": 15905, "pct_vs_baseline": 6.2}, {"deaths": 16612, "baseline": 15794, "pct_vs_baseline": 5.2}, {"deaths": 16000, "baseline": 15879, "pct_vs_baseline": 0.8}, {"deaths": 16390, "baseline": 15873, "pct_vs_baseline": 3.3}, {"deaths": 16292, "baseline": 15798, "pct_vs_baseline": 3.1}, {"deaths": 16651, "baseline": 15906, "pct_vs_baseline": 4.7}, {"deaths": 15969, "baseline": 16032, "pct_vs_baseline": -0.4}, {"deaths": 16622, "baseline": 16291, "pct_vs_baseline": 2.0}, {"deaths": 16993, "baseline": 16805, "pct_vs_baseline": 1.1}, {"deaths": 16552, "baseline": 16850, "pct_vs_baseline": -1.8}, {"deaths": 16608, "baseline": 17031, "pct_vs_baseline": -2.5}, {"deaths": 16895, "baseline": 16767, "pct_vs_baseline": 0.8}, {"deaths": 17604, "baseline": 17083, "pct_vs_baseline": 3.0}, {"deaths": 16842, "baseline": 17255, "pct_vs_baseline": -2.4}, {"deaths": 17785, "baseline": 17244, "pct_vs_baseline": 3.1}, {"deaths": 18091, "baseline": 17370, "pct_vs_baseline": 4.1}, {"deaths": 18342, "baseline": 17852, "pct_vs_baseline": 2.7}, {"deaths": 17943, "baseline": 18023, "pct_vs_baseline": -0.4}, {"deaths": 18990, "baseline": 18194, "pct_vs_baseline": 4.4}, {"deaths": 17954, "baseline": 18158, "pct_vs_baseline": -1.1}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18686, "baseline": 18845, "pct_vs_baseline": -0.8}, {"deaths": 19170, "baseline": 19154, "pct_vs_baseline": 0.1}, {"deaths": 19163, "baseline": 19073, "pct_vs_baseline": 0.5}, {"deaths": 19505, "baseline": 19226, "pct_vs_baseline": 1.4}, {"deaths": 19812, "baseline": 19955, "pct_vs_baseline": -0.7}, {"deaths": 19981, "baseline": 19962, "pct_vs_baseline": 0.1}, {"deaths": 20150, "baseline": 20447, "pct_vs_baseline": -1.5}, {"deaths": 20349, "baseline": 20821, "pct_vs_baseline": -2.3}, {"deaths": 20790, "baseline": 21267, "pct_vs_baseline": -2.2}, {"deaths": 20453, "baseline": 20844, "pct_vs_baseline": -1.9}, {"deaths": 19795, "baseline": 20056, "pct_vs_baseline": -1.3}, {"deaths": 19016, "baseline": 19366, "pct_vs_baseline": -1.8}, {"deaths": 18562, "baseline": 18756, "pct_vs_baseline": -1.0}, {"deaths": 18671, "baseline": 18304, "pct_vs_baseline": 2.0}, {"deaths": 17852, "baseline": 17723, "pct_vs_baseline": 0.7}, {"deaths": 18089, "baseline": 17212, "pct_vs_baseline": 5.1}, {"deaths": 17894, "baseline": 17200, "pct_vs_baseline": 4.0}, {"deaths": 17090, "baseline": 16747, "pct_vs_baseline": 2.0}, {"deaths": 17118, "baseline": 17069, "pct_vs_baseline": 0.3}, {"deaths": 17315, "baseline": 16533, "pct_vs_baseline": 4.7}, {"deaths": 17080, "baseline": 16407, "pct_vs_baseline": 4.1}, {"deaths": 16921, "baseline": 16340, "pct_vs_baseline": 3.6}, {"deaths": 17491, "baseline": 16270, "pct_vs_baseline": 7.5}, {"deaths": 16484, "baseline": 15967, "pct_vs_baseline": 3.2}, {"deaths": 16639, "baseline": 16092, "pct_vs_baseline": 3.4}, {"deaths": 17918, "baseline": 16016, "pct_vs_baseline": 11.9}, {"deaths": 16552, "baseline": 16911, "pct_vs_baseline": -2.1}, {"deaths": 16319, "baseline": 16210, "pct_vs_baseline": 0.7}, {"deaths": 16856, "baseline": 16671, "pct_vs_baseline": 1.1}, {"deaths": 19630, "baseline": 16639, "pct_vs_baseline": 18.0}, {"deaths": 17034, "baseline": 16706, "pct_vs_baseline": 2.0}, {"deaths": 16540, "baseline": 16367, "pct_vs_baseline": 1.1}, {"deaths": 15934, "baseline": 16238, "pct_vs_baseline": -1.9}, {"deaths": 16263, "baseline": 16080, "pct_vs_baseline": 1.1}, {"deaths": 17637, "baseline": 16044, "pct_vs_baseline": 9.9}, {"deaths": 15988, "baseline": 16025, "pct_vs_baseline": -0.2}, {"deaths": 16303, "baseline": 16120, "pct_vs_baseline": 1.1}, {"deaths": 16500, "baseline": 16174, "pct_vs_baseline": 2.0}, {"deaths": 17402, "baseline": 16082, "pct_vs_baseline": 8.2}, {"deaths": 16899, "baseline": 16436, "pct_vs_baseline": 2.8}, {"deaths": 17666, "baseline": 17016, "pct_vs_baseline": 3.8}, {"deaths": 17713, "baseline": 16912, "pct_vs_baseline": 4.7}, {"deaths": 17327, "baseline": 17002, "pct_vs_baseline": 1.9}, {"deaths": 17488, "baseline": 16956, "pct_vs_baseline": 3.1}, {"deaths": 17859, "baseline": 17359, "pct_vs_baseline": 2.9}, {"deaths": 18242, "baseline": 17387, "pct_vs_baseline": 4.9}, {"deaths": 18535, "baseline": 17457, "pct_vs_baseline": 6.2}, {"deaths": 18581, "baseline": 17683, "pct_vs_baseline": 5.1}, {"deaths": 19143, "baseline": 18081, "pct_vs_baseline": 5.9}, {"deaths": 19101, "baseline": 18204, "pct_vs_baseline": 4.9}, {"deaths": 19062, "baseline": 18530, "pct_vs_baseline": 2.9}, {"deaths": 18204, "baseline": 18333, "pct_vs_baseline": -0.7}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 18883, "baseline": 19225, "pct_vs_baseline": -1.8}, {"deaths": 19408, "baseline": 19546, "pct_vs_baseline": -0.7}, {"deaths": 18953, "baseline": 19543, "pct_vs_baseline": -3.0}, {"deaths": 18827, "baseline": 19762, "pct_vs_baseline": -4.7}, {"deaths": 19774, "baseline": 20444, "pct_vs_baseline": -3.3}, {"deaths": 19038, "baseline": 20451, "pct_vs_baseline": -6.9}, {"deaths": 19648, "baseline": 20993, "pct_vs_baseline": -6.4}, {"deaths": 18953, "baseline": 21448, "pct_vs_baseline": -11.6}, {"deaths": 19505, "baseline": 21956, "pct_vs_baseline": -11.2}, {"deaths": 19667, "baseline": 21444, "pct_vs_baseline": -8.3}, {"deaths": 19849, "baseline": 20517, "pct_vs_baseline": -3.3}, {"deaths": 19722, "baseline": 19654, "pct_vs_baseline": 0.3}, {"deaths": 19678, "baseline": 18984, "pct_vs_baseline": 3.7}, {"deaths": 20662, "baseline": 18530, "pct_vs_baseline": 11.5}, {"deaths": 20502, "baseline": 17944, "pct_vs_baseline": 14.3}, {"deaths": 19261, "baseline": 17522, "pct_vs_baseline": 9.9}, {"deaths": 18557, "baseline": 17468, "pct_vs_baseline": 6.2}, {"deaths": 17920, "baseline": 17005, "pct_vs_baseline": 5.4}, {"deaths": 17651, "baseline": 17278, "pct_vs_baseline": 2.2}, {"deaths": 17001, "baseline": 16843, "pct_vs_baseline": 0.9}, {"deaths": 17163, "baseline": 16532, "pct_vs_baseline": 3.8}, {"deaths": 16776, "baseline": 16682, "pct_vs_baseline": 0.6}, {"deaths": 17262, "baseline": 16525, "pct_vs_baseline": 4.5}, {"deaths": 16601, "baseline": 16028, "pct_vs_baseline": 3.6}, {"deaths": 16401, "baseline": 16366, "pct_vs_baseline": 0.2}, {"deaths": 17293, "baseline": 16483, "pct_vs_baseline": 4.9}, {"deaths": 16457, "baseline": 17016, "pct_vs_baseline": -3.3}, {"deaths": 16142, "baseline": 16305, "pct_vs_baseline": -1.0}, {"deaths": 16537, "baseline": 16716, "pct_vs_baseline": -1.1}, {"deaths": 16887, "baseline": 17291, "pct_vs_baseline": -2.3}, {"deaths": 17433, "baseline": 16954, "pct_vs_baseline": 2.8}, {"deaths": 17470, "baseline": 16588, "pct_vs_baseline": 5.3}, {"deaths": 19720, "baseline": 16422, "pct_vs_baseline": 20.1}, {"deaths": 17559, "baseline": 16227, "pct_vs_baseline": 8.2}, {"deaths": 16656, "baseline": 16384, "pct_vs_baseline": 1.7}, {"deaths": 16789, "baseline": 15971, "pct_vs_baseline": 5.1}, {"deaths": 17155, "baseline": 16213, "pct_vs_baseline": 5.8}, {"deaths": 17555, "baseline": 16259, "pct_vs_baseline": 8.0}, {"deaths": 17446, "baseline": 16424, "pct_vs_baseline": 6.2}, {"deaths": 17614, "baseline": 16593, "pct_vs_baseline": 6.2}, {"deaths": 17501, "baseline": 17266, "pct_vs_baseline": 1.4}, {"deaths": 17754, "baseline": 17170, "pct_vs_baseline": 3.4}, {"deaths": 18588, "baseline": 17184, "pct_vs_baseline": 8.2}, {"deaths": 18584, "baseline": 17104, "pct_vs_baseline": 8.7}, {"deaths": 19007, "baseline": 17528, "pct_vs_baseline": 8.4}, {"deaths": 19727, "baseline": 17577, "pct_vs_baseline": 12.2}, {"deaths": 20182, "baseline": 17751, "pct_vs_baseline": 13.7}, {"deaths": 21304, "baseline": 17899, "pct_vs_baseline": 19.0}, {"deaths": 22604, "baseline": 18316, "pct_vs_baseline": 23.4}, {"deaths": 24003, "baseline": 18297, "pct_vs_baseline": 31.2}, {"deaths": 24724, "baseline": 18667, "pct_vs_baseline": 32.4}, {"deaths": 25554, "baseline": 18346, "pct_vs_baseline": 39.3}, {"deaths": 25497, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 24919, "baseline": 19259, "pct_vs_baseline": 29.4}, {"deaths": 24532, "baseline": 19571, "pct_vs_baseline": 25.3}, {"deaths": 24129, "baseline": 19433, "pct_vs_baseline": 24.2}, {"deaths": 22674, "baseline": 19659, "pct_vs_baseline": 15.3}, {"deaths": 21773, "baseline": 20255, "pct_vs_baseline": 7.5}, {"deaths": 20946, "baseline": 20078, "pct_vs_baseline": 4.3}, {"deaths": 20493, "baseline": 20444, "pct_vs_baseline": 0.2}, {"deaths": 18979, "baseline": 20586, "pct_vs_baseline": -7.8}, {"deaths": 18455, "baseline": 21137, "pct_vs_baseline": -12.7}, {"deaths": 18606, "baseline": 20977, "pct_vs_baseline": -11.3}, {"deaths": 18374, "baseline": 20333, "pct_vs_baseline": -9.6}, {"deaths": 18437, "baseline": 19596, "pct_vs_baseline": -5.9}, {"deaths": 18520, "baseline": 19099, "pct_vs_baseline": -3.0}, {"deaths": 18873, "baseline": 18929, "pct_vs_baseline": -0.3}, {"deaths": 19098, "baseline": 18426, "pct_vs_baseline": 3.6}, {"deaths": 19282, "baseline": 17751, "pct_vs_baseline": 8.6}, {"deaths": 19555, "baseline": 17646, "pct_vs_baseline": 10.8}, {"deaths": 19329, "baseline": 17166, "pct_vs_baseline": 12.6}, {"deaths": 18579, "baseline": 17393, "pct_vs_baseline": 6.8}, {"deaths": 17811, "baseline": 16897, "pct_vs_baseline": 5.4}, {"deaths": 17193, "baseline": 16699, "pct_vs_baseline": 3.0}, {"deaths": 18191, "baseline": 16797, "pct_vs_baseline": 8.3}, {"deaths": 17442, "baseline": 16622, "pct_vs_baseline": 4.9}, {"deaths": 19076, "baseline": 16094, "pct_vs_baseline": 18.5}, {"deaths": 17191, "baseline": 16522, "pct_vs_baseline": 4.0}, {"deaths": 17013, "baseline": 16711, "pct_vs_baseline": 1.8}, {"deaths": 16994, "baseline": 16457, "pct_vs_baseline": 3.3}, {"deaths": 17662, "baseline": 16061, "pct_vs_baseline": 10.0}, {"deaths": 17613, "baseline": 16734, "pct_vs_baseline": 5.3}, {"deaths": 17211, "baseline": 17414, "pct_vs_baseline": -1.2}, {"deaths": 17021, "baseline": 17354, "pct_vs_baseline": -1.9}, {"deaths": 17560, "baseline": 16752, "pct_vs_baseline": 4.8}, {"deaths": 17501, "baseline": 16990, "pct_vs_baseline": 3.0}, {"deaths": 17151, "baseline": 16692, "pct_vs_baseline": 2.7}, {"deaths": 17341, "baseline": 16492, "pct_vs_baseline": 5.2}, {"deaths": 18879, "baseline": 16198, "pct_vs_baseline": 16.6}, {"deaths": 18057, "baseline": 16454, "pct_vs_baseline": 9.7}, {"deaths": 18157, "baseline": 16563, "pct_vs_baseline": 9.6}, {"deaths": 18129, "baseline": 16780, "pct_vs_baseline": 8.0}, {"deaths": 18209, "baseline": 16830, "pct_vs_baseline": 8.2}, {"deaths": 18949, "baseline": 17411, "pct_vs_baseline": 8.8}, {"deaths": 19761, "baseline": 17351, "pct_vs_baseline": 13.9}, {"deaths": 20387, "baseline": 17434, "pct_vs_baseline": 16.9}, {"deaths": 20426, "baseline": 17462, "pct_vs_baseline": 17.0}, {"deaths": 21071, "baseline": 17925, "pct_vs_baseline": 17.6}, {"deaths": 22344, "baseline": 18199, "pct_vs_baseline": 22.8}, {"deaths": 23273, "baseline": 18418, "pct_vs_baseline": 26.4}, {"deaths": 24185, "baseline": 18800, "pct_vs_baseline": 28.6}, {"deaths": 24032, "baseline": 19435, "pct_vs_baseline": 23.7}, {"deaths": 23009, "baseline": 19687, "pct_vs_baseline": 16.9}, {"deaths": 22479, "baseline": 20130, "pct_vs_baseline": 11.7}, {"deaths": 22174, "baseline": 20022, "pct_vs_baseline": 10.8}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 20870, "baseline": 20550, "pct_vs_baseline": 1.6}, {"deaths": 19921, "baseline": 20790, "pct_vs_baseline": -4.2}, {"deaths": 19845, "baseline": 20534, "pct_vs_baseline": -3.4}, {"deaths": 20224, "baseline": 20452, "pct_vs_baseline": -1.1}, {"deaths": 20698, "baseline": 20911, "pct_vs_baseline": -1.0}, {"deaths": 20495, "baseline": 20559, "pct_vs_baseline": -0.3}, {"deaths": 21165, "baseline": 20846, "pct_vs_baseline": 1.5}, {"deaths": 20375, "baseline": 20687, "pct_vs_baseline": -1.5}, {"deaths": 20811, "baseline": 21043, "pct_vs_baseline": -1.1}, {"deaths": 21251, "baseline": 20921, "pct_vs_baseline": 1.6}, {"deaths": 21357, "baseline": 20214, "pct_vs_baseline": 5.7}, {"deaths": 21236, "baseline": 19518, "pct_vs_baseline": 8.8}, {"deaths": 20883, "baseline": 19079, "pct_vs_baseline": 9.5}, {"deaths": 20953, "baseline": 19054, "pct_vs_baseline": 10.0}, {"deaths": 20253, "baseline": 18704, "pct_vs_baseline": 8.3}, {"deaths": 19579, "baseline": 18252, "pct_vs_baseline": 7.3}, {"deaths": 19361, "baseline": 18147, "pct_vs_baseline": 6.7}, {"deaths": 19225, "baseline": 17651, "pct_vs_baseline": 8.9}, {"deaths": 19265, "baseline": 17583, "pct_vs_baseline": 9.6}, {"deaths": 18565, "baseline": 17139, "pct_vs_baseline": 8.3}, {"deaths": 17232, "baseline": 16880, "pct_vs_baseline": 2.1}, {"deaths": 18104, "baseline": 17166, "pct_vs_baseline": 5.5}, {"deaths": 17960, "baseline": 16951, "pct_vs_baseline": 6.0}, {"deaths": 18497, "baseline": 16766, "pct_vs_baseline": 10.3}, {"deaths": 19059, "baseline": 16579, "pct_vs_baseline": 15.0}, {"deaths": 18562, "baseline": 16974, "pct_vs_baseline": 9.4}, {"deaths": 18155, "baseline": 16610, "pct_vs_baseline": 9.3}, {"deaths": 19019, "baseline": 16359, "pct_vs_baseline": 16.3}, {"deaths": 20987, "baseline": 16859, "pct_vs_baseline": 24.5}, {"deaths": 20297, "baseline": 17625, "pct_vs_baseline": 15.2}, {"deaths": 19972, "baseline": 17671, "pct_vs_baseline": 13.0}, {"deaths": 19832, "baseline": 17166, "pct_vs_baseline": 15.5}, {"deaths": 19932, "baseline": 17239, "pct_vs_baseline": 15.6}, {"deaths": 18992, "baseline": 16693, "pct_vs_baseline": 13.8}, {"deaths": 18294, "baseline": 16740, "pct_vs_baseline": 9.3}, {"deaths": 18777, "baseline": 16750, "pct_vs_baseline": 12.1}, {"deaths": 18276, "baseline": 16791, "pct_vs_baseline": 8.8}, {"deaths": 19121, "baseline": 17074, "pct_vs_baseline": 12.0}, {"deaths": 20402, "baseline": 17139, "pct_vs_baseline": 19.0}, {"deaths": 20627, "baseline": 17202, "pct_vs_baseline": 19.9}, {"deaths": 21790, "baseline": 17716, "pct_vs_baseline": 23.0}, {"deaths": 21819, "baseline": 17784, "pct_vs_baseline": 22.7}, {"deaths": 21449, "baseline": 17994, "pct_vs_baseline": 19.2}, {"deaths": 19933, "baseline": 18031, "pct_vs_baseline": 10.5}, {"deaths": 20188, "baseline": 18582, "pct_vs_baseline": 8.6}, {"deaths": 20825, "baseline": 18950, "pct_vs_baseline": 9.9}, {"deaths": 21451, "baseline": 19490, "pct_vs_baseline": 10.1}, {"deaths": 22273, "baseline": 20008, "pct_vs_baseline": 11.3}, {"deaths": 24125, "baseline": 20483, "pct_vs_baseline": 17.8}, {"deaths": 25977, "baseline": 20512, "pct_vs_baseline": 26.6}, {"deaths": 28682, "baseline": 20751, "pct_vs_baseline": 38.2}, {"deaths": 27291, "baseline": 20508, "pct_vs_baseline": 33.1}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 25464, "baseline": 20540, "pct_vs_baseline": 24.0}, {"deaths": 22713, "baseline": 20360, "pct_vs_baseline": 11.6}, {"deaths": 21253, "baseline": 20255, "pct_vs_baseline": 4.9}, {"deaths": 20657, "baseline": 20080, "pct_vs_baseline": 2.9}, {"deaths": 21083, "baseline": 20323, "pct_vs_baseline": 3.7}, {"deaths": 20547, "baseline": 20109, "pct_vs_baseline": 2.2}, {"deaths": 20996, "baseline": 20542, "pct_vs_baseline": 2.2}, {"deaths": 20901, "baseline": 20309, "pct_vs_baseline": 2.9}, {"deaths": 21053, "baseline": 21019, "pct_vs_baseline": 0.2}, {"deaths": 21935, "baseline": 21351, "pct_vs_baseline": 2.7}, {"deaths": 21828, "baseline": 20752, "pct_vs_baseline": 5.2}, {"deaths": 21332, "baseline": 20238, "pct_vs_baseline": 5.4}, {"deaths": 20730, "baseline": 19710, "pct_vs_baseline": 5.2}, {"deaths": 19974, "baseline": 19839, "pct_vs_baseline": 0.7}, {"deaths": 20157, "baseline": 19374, "pct_vs_baseline": 4.0}, {"deaths": 19861, "baseline": 18841, "pct_vs_baseline": 5.4}, {"deaths": 19310, "baseline": 18492, "pct_vs_baseline": 4.4}, {"deaths": 19055, "baseline": 18071, "pct_vs_baseline": 5.4}, {"deaths": 18896, "baseline": 17968, "pct_vs_baseline": 5.2}, {"deaths": 18385, "baseline": 17436, "pct_vs_baseline": 5.4}, {"deaths": 18416, "baseline": 17036, "pct_vs_baseline": 8.1}, {"deaths": 18032, "baseline": 17406, "pct_vs_baseline": 3.6}, {"deaths": 18389, "baseline": 17374, "pct_vs_baseline": 5.8}, {"deaths": 17857, "baseline": 17248, "pct_vs_baseline": 3.5}, {"deaths": 18097, "baseline": 17027, "pct_vs_baseline": 6.3}, {"deaths": 17059, "baseline": 17471, "pct_vs_baseline": -2.4}, {"deaths": 17168, "baseline": 16956, "pct_vs_baseline": 1.3}, {"deaths": 17758, "baseline": 17042, "pct_vs_baseline": 4.2}, {"deaths": 16779, "baseline": 17739, "pct_vs_baseline": -5.4}, {"deaths": 16976, "baseline": 18473, "pct_vs_baseline": -8.1}, {"deaths": 16885, "baseline": 18366, "pct_vs_baseline": -8.1}, {"deaths": 17479, "baseline": 17976, "pct_vs_baseline": -2.8}, {"deaths": 18498, "baseline": 17995, "pct_vs_baseline": 2.8}, {"deaths": 18159, "baseline": 17315, "pct_vs_baseline": 4.9}, {"deaths": 16772, "baseline": 17186, "pct_vs_baseline": -2.4}, {"deaths": 18151, "baseline": 17365, "pct_vs_baseline": 4.5}, {"deaths": 17928, "baseline": 17217, "pct_vs_baseline": 4.1}, {"deaths": 17392, "baseline": 17597, "pct_vs_baseline": -1.2}, {"deaths": 17670, "baseline": 17870, "pct_vs_baseline": -1.1}, {"deaths": 18216, "baseline": 17994, "pct_vs_baseline": 1.2}, {"deaths": 18803, "baseline": 18580, "pct_vs_baseline": 1.2}, {"deaths": 19492, "baseline": 18720, "pct_vs_baseline": 4.1}, {"deaths": 20291, "baseline": 18872, "pct_vs_baseline": 7.5}, {"deaths": 20392, "baseline": 18665, "pct_vs_baseline": 9.3}, {"deaths": 20621, "baseline": 19146, "pct_vs_baseline": 7.7}, {"deaths": 20837, "baseline": 19596, "pct_vs_baseline": 6.3}, {"deaths": 21099, "baseline": 20245, "pct_vs_baseline": 4.2}, {"deaths": 22058, "baseline": 20887, "pct_vs_baseline": 5.6}, {"deaths": 23006, "baseline": 21649, "pct_vs_baseline": 6.3}, {"deaths": 22700, "baseline": 22007, "pct_vs_baseline": 3.2}, {"deaths": 23168, "baseline": 22787, "pct_vs_baseline": 1.7}, {"deaths": 22130, "baseline": 22235, "pct_vs_baseline": -0.5}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 21851, "baseline": 21764, "pct_vs_baseline": 0.4}, {"deaths": 21438, "baseline": 21149, "pct_vs_baseline": 1.4}, {"deaths": 21815, "baseline": 20669, "pct_vs_baseline": 5.5}, {"deaths": 22131, "baseline": 20377, "pct_vs_baseline": 8.6}, {"deaths": 21934, "baseline": 20628, "pct_vs_baseline": 6.3}, {"deaths": 22250, "baseline": 20201, "pct_vs_baseline": 10.1}, {"deaths": 21212, "baseline": 20490, "pct_vs_baseline": 3.5}, {"deaths": 20225, "baseline": 19911, "pct_vs_baseline": 1.6}, {"deaths": 19918, "baseline": 20123, "pct_vs_baseline": -1.0}, {"deaths": 19333, "baseline": 20382, "pct_vs_baseline": -5.1}, {"deaths": 19412, "baseline": 20241, "pct_vs_baseline": -4.1}, {"deaths": 18753, "baseline": 19949, "pct_vs_baseline": -6.0}, {"deaths": 18842, "baseline": 19675, "pct_vs_baseline": -4.2}, {"deaths": 19083, "baseline": 19827, "pct_vs_baseline": -3.8}, {"deaths": 18416, "baseline": 19572, "pct_vs_baseline": -5.9}, {"deaths": 18161, "baseline": 19214, "pct_vs_baseline": -5.5}, {"deaths": 18685, "baseline": 18935, "pct_vs_baseline": -1.3}, {"deaths": 18976, "baseline": 18524, "pct_vs_baseline": 2.4}, {"deaths": 18158, "baseline": 18302, "pct_vs_baseline": -0.8}, {"deaths": 18742, "baseline": 17815, "pct_vs_baseline": 5.2}, {"deaths": 17612, "baseline": 17417, "pct_vs_baseline": 1.1}, {"deaths": 17543, "baseline": 17605, "pct_vs_baseline": -0.4}, {"deaths": 17471, "baseline": 17709, "pct_vs_baseline": -1.3}, {"deaths": 17827, "baseline": 17703, "pct_vs_baseline": 0.7}, {"deaths": 18231, "baseline": 17477, "pct_vs_baseline": 4.3}, {"deaths": 19174, "baseline": 17569, "pct_vs_baseline": 9.1}, {"deaths": 17193, "baseline": 17065, "pct_vs_baseline": 0.7}, {"deaths": 18124, "baseline": 17380, "pct_vs_baseline": 4.3}, {"deaths": 18097, "baseline": 17754, "pct_vs_baseline": 1.9}, {"deaths": 17174, "baseline": 18200, "pct_vs_baseline": -5.6}, {"deaths": 17759, "baseline": 17669, "pct_vs_baseline": 0.5}, {"deaths": 17456, "baseline": 17776, "pct_vs_baseline": -1.8}, {"deaths": 18429, "baseline": 18317, "pct_vs_baseline": 0.6}, {"deaths": 17274, "baseline": 17625, "pct_vs_baseline": -2.0}, {"deaths": 17971, "baseline": 17340, "pct_vs_baseline": 3.6}, {"deaths": 18526, "baseline": 17717, "pct_vs_baseline": 4.6}, {"deaths": 17488, "baseline": 17544, "pct_vs_baseline": -0.3}, {"deaths": 18792, "baseline": 17745, "pct_vs_baseline": 5.9}, {"deaths": 18821, "baseline": 18210, "pct_vs_baseline": 3.4}, {"deaths": 18831, "baseline": 18313, "pct_vs_baseline": 2.8}, {"deaths": 19790, "baseline": 18942, "pct_vs_baseline": 4.5}, {"deaths": 20063, "baseline": 19308, "pct_vs_baseline": 3.9}, {"deaths": 19619, "baseline": 19608, "pct_vs_baseline": 0.1}, {"deaths": 19286, "baseline": 19365, "pct_vs_baseline": -0.4}, {"deaths": 19487, "baseline": 19749, "pct_vs_baseline": -1.3}, {"deaths": 20260, "baseline": 20395, "pct_vs_baseline": -0.7}, {"deaths": 20645, "baseline": 20908, "pct_vs_baseline": -1.3}, {"deaths": 20734, "baseline": 21680, "pct_vs_baseline": -4.4}, {"deaths": 20821, "baseline": 22582, "pct_vs_baseline": -7.8}, {"deaths": 20502, "baseline": 22958, "pct_vs_baseline": -10.7}, {"deaths": 21190, "baseline": 23623, "pct_vs_baseline": -10.3}, {"deaths": 20223, "baseline": 23071, "pct_vs_baseline": -12.3}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 21406, "baseline": 22397, "pct_vs_baseline": -4.4}, {"deaths": 22087, "baseline": 21602, "pct_vs_baseline": 2.2}, {"deaths": 21675, "baseline": 21199, "pct_vs_baseline": 2.2}, {"deaths": 23175, "baseline": 20903, "pct_vs_baseline": 10.9}, {"deaths": 22553, "baseline": 21052, "pct_vs_baseline": 7.1}, {"deaths": 22473, "baseline": 20655, "pct_vs_baseline": 8.8}, {"deaths": 22797, "baseline": 20703, "pct_vs_baseline": 10.1}, {"deaths": 23416, "baseline": 19887, "pct_vs_baseline": 17.7}, {"deaths": 22772, "baseline": 19948, "pct_vs_baseline": 14.2}, {"deaths": 22085, "baseline": 20158, "pct_vs_baseline": 9.6}, {"deaths": 21708, "baseline": 20164, "pct_vs_baseline": 7.7}, {"deaths": 21295, "baseline": 19896, "pct_vs_baseline": 7.0}, {"deaths": 20484, "baseline": 19731, "pct_vs_baseline": 3.8}, {"deaths": 19875, "baseline": 19909, "pct_vs_baseline": -0.2}, {"deaths": 19738, "baseline": 19685, "pct_vs_baseline": 0.3}, {"deaths": 19348, "baseline": 19229, "pct_vs_baseline": 0.6}, {"deaths": 18039, "baseline": 19094, "pct_vs_baseline": -5.5}, {"deaths": 18829, "baseline": 18901, "pct_vs_baseline": -0.4}, {"deaths": 17667, "baseline": 18510, "pct_vs_baseline": -4.6}, {"deaths": 18003, "baseline": 18101, "pct_vs_baseline": -0.5}, {"deaths": 17586, "baseline": 17523, "pct_vs_baseline": 0.4}, {"deaths": 18322, "baseline": 17729, "pct_vs_baseline": 3.3}, {"deaths": 17753, "baseline": 17705, "pct_vs_baseline": 0.3}, {"deaths": 17412, "baseline": 17972, "pct_vs_baseline": -3.1}, {"deaths": 17393, "baseline": 17796, "pct_vs_baseline": -2.3}, {"deaths": 17796, "baseline": 17820, "pct_vs_baseline": -0.1}, {"deaths": 18106, "baseline": 17193, "pct_vs_baseline": 5.3}, {"deaths": 17014, "baseline": 17741, "pct_vs_baseline": -4.1}, {"deaths": 17604, "baseline": 18003, "pct_vs_baseline": -2.2}, {"deaths": 17171, "baseline": 17709, "pct_vs_baseline": -3.0}, {"deaths": 16636, "baseline": 17814, "pct_vs_baseline": -6.6}, {"deaths": 17418, "baseline": 17959, "pct_vs_baseline": -3.0}, {"deaths": 18391, "baseline": 18816, "pct_vs_baseline": -2.3}, {"deaths": 16934, "baseline": 17827, "pct_vs_baseline": -5.0}, {"deaths": 17433, "baseline": 17407, "pct_vs_baseline": 0.2}, {"deaths": 17182, "baseline": 18224, "pct_vs_baseline": -5.7}, {"deaths": 16917, "baseline": 17781, "pct_vs_baseline": -4.9}, {"deaths": 17889, "baseline": 18203, "pct_vs_baseline": -1.7}, {"deaths": 17477, "baseline": 18494, "pct_vs_baseline": -5.5}, {"deaths": 18138, "baseline": 18699, "pct_vs_baseline": -3.0}, {"deaths": 18761, "baseline": 19367, "pct_vs_baseline": -3.1}, {"deaths": 18400, "baseline": 19778, "pct_vs_baseline": -7.0}, {"deaths": 19509, "baseline": 20067, "pct_vs_baseline": -2.8}, {"deaths": 18978, "baseline": 19724, "pct_vs_baseline": -3.8}, {"deaths": 18980, "baseline": 20075, "pct_vs_baseline": -5.5}, {"deaths": 19121, "baseline": 20799, "pct_vs_baseline": -8.1}, {"deaths": 19137, "baseline": 21330, "pct_vs_baseline": -10.3}, {"deaths": 20137, "baseline": 22111, "pct_vs_baseline": -8.9}, {"deaths": 20107, "baseline": 22918, "pct_vs_baseline": -12.3}, {"deaths": 20092, "baseline": 23238, "pct_vs_baseline": -13.5}, {"deaths": 20156, "baseline": 24049, "pct_vs_baseline": -16.2}, {"deaths": 19926, "baseline": 23474, "pct_vs_baseline": -15.1}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}], [{"deaths": 22038, "baseline": 22902, "pct_vs_baseline": -3.8}, {"deaths": 23352, "baseline": 22138, "pct_vs_baseline": 5.5}, {"deaths": 23206, "baseline": 21743, "pct_vs_baseline": 6.7}, {"deaths": 22035, "baseline": 21772, "pct_vs_baseline": 1.2}, {"deaths": 22179, "baseline": 21608, "pct_vs_baseline": 2.6}, {"deaths": 22157, "baseline": 21342, "pct_vs_baseline": 3.8}, {"deaths": 21988, "baseline": 21333, "pct_vs_baseline": 3.1}, {"deaths": 21456, "baseline": 20779, "pct_vs_baseline": 3.3}, {"deaths": 21063, "baseline": 20602, "pct_vs_baseline": 2.2}, {"deaths": 19756, "baseline": 20642, "pct_vs_baseline": -4.3}, {"deaths": 19106, "baseline": 20536, "pct_vs_baseline": -7.0}, {"deaths": 18737, "baseline": 20211, "pct_vs_baseline": -7.3}, {"deaths": 18584, "baseline": 19892, "pct_vs_baseline": -6.6}, {"deaths": 18778, "baseline": 19752, "pct_vs_baseline": -4.9}, {"deaths": 18648, "baseline": 19532, "pct_vs_baseline": -4.5}, {"deaths": 18861, "baseline": 19246, "pct_vs_baseline": -2.0}, {"deaths": 17989, "baseline": 18990, "pct_vs_baseline": -5.3}, {"deaths": 18353, "baseline": 19083, "pct_vs_baseline": -3.8}, {"deaths": 18331, "baseline": 18513, "pct_vs_baseline": -1.0}, {"deaths": 17663, "baseline": 18301, "pct_vs_baseline": -3.5}, {"deaths": 18114, "baseline": 17608, "pct_vs_baseline": 2.9}, {"deaths": 17886, "baseline": 18038, "pct_vs_baseline": -0.8}, {"deaths": 17010, "baseline": 17803, "pct_vs_baseline": -4.5}, {"deaths": 16880, "baseline": 18134, "pct_vs_baseline": -6.9}, {"deaths": 18427, "baseline": 17994, "pct_vs_baseline": 2.4}, {"deaths": 23665, "baseline": 17921, "pct_vs_baseline": 32.1}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}, {"deaths": null, "baseline": null, "pct_vs_baseline": null}]]}, "incomplete_years": [2026], "source": "Eurostat demo_r_mwk_ts 2000-2020, ab 2021 Destatis-Sonderauswertung 'Sterbefälle nach Tagen, Wochen und Monaten' (aktueller, wenige Tage Verzug), Gestorbene je ISO-Woche, Deutschland. Taggenau zu Kalendermonaten aggregiert. Baseline je Zelle = Mittelwert desselben Kalendermonats in den bis zu 5 vorangehenden vollstaendigen Jahren (gleitend, min. 3 Vorjahre). Die letzten 1-2 Wochen sind vorläufig und koennen durch Nachmeldungen noch revidiert werden."}, "monthly_age_adjusted": {"years": [2021, 2022, 2023, 2024, 2025, 2026], "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"], "age_std_rate_per_100k_annualized": {"2021": [1157.1, 1097.6, 989.1, 1022.9, 982.5, 957.8, 929.3, 928.0, 972.8, 1026.8, 1170.4, 1236.1], "2022": [1076.4, 1093.1, 1117.1, 1065.5, 983.6, 976.8, 1033.2, 1033.1, 1003.4, 1124.5, 1098.9, 1368.1], "2023": [1194.9, 1106.6, 1134.4, 1053.0, 987.0, 951.9, 909.4, 936.1, 937.7, 1016.6, 1106.9, 1198.8], "2024": [1141.5, 1106.2, 1004.6, 975.3, 955.2, 949.7, 925.6, 932.2, 965.9, 1024.9, 1056.1, 1086.7], "2025": [1135.8, 1170.1, 1096.4, 984.7, 924.5, 906.3, 892.3, 897.8, 895.9, 965.1, 991.9, 1041.0], "2026": [1161.6, 1115.1, 983.6, 955.9, 930.7, 914.9, null, null, null, null, null, null]}, "source": "Destatis-Sonderauswertung 'Sterbefälle nach Tagen, Wochen und Monaten' (Altersgruppen je Woche, ab 2021), taggenau auf Kalendermonate verteilt. Direkt auf ESP2013 standardisiert, auf Jahresrate hochgerechnet (Tage im Monat -> 365,25 Tage) und damit vergleichbar zur jährlichen ESP2013-Kurve. Bevölkerung je Altersgruppe: Eurostat demo_pjan, Stand 1. Januar des jeweiligen Jahres (2026: Stand 2025, da noch keine Fortschreibung vorliegt)."}, "weekly_age_adjusted": {"years": [2021, 2022, 2023, 2024, 2025, 2026], "max_kw": 52, "cells": [[{"asr": 1324.9}, {"asr": 1306.5}, {"asr": 1284.5}, {"asr": 1208.5}, {"asr": 1164.2}, {"asr": 1116.4}, {"asr": 1095.0}, {"asr": 1014.7}, {"asr": 985.9}, {"asr": 996.1}, {"asr": 983.9}, {"asr": 989.8}, {"asr": 991.2}, {"asr": 1010.1}, {"asr": 1024.1}, {"asr": 1036.0}, {"asr": 1046.5}, {"asr": 1036.6}, {"asr": 996.5}, {"asr": 955.6}, {"asr": 923.8}, {"asr": 975.2}, {"asr": 934.3}, {"asr": 1022.6}, {"asr": 922.3}, {"asr": 909.8}, {"asr": 911.8}, {"asr": 949.8}, {"asr": 944.5}, {"asr": 921.0}, {"asr": 912.6}, {"asr": 944.6}, {"asr": 938.6}, {"asr": 917.2}, {"asr": 929.0}, {"asr": 1011.5}, {"asr": 966.3}, {"asr": 973.6}, {"asr": 970.2}, {"asr": 972.3}, {"asr": 1013.3}, {"asr": 1056.7}, {"asr": 1089.1}, {"asr": 1089.9}, {"asr": 1124.0}, {"asr": 1193.0}, {"asr": 1240.8}, {"asr": 1289.1}, {"asr": 1280.9}, {"asr": 1227.4}, {"asr": 1198.8}, {"asr": 1184.9}], [{"asr": 1101.5}, {"asr": 1053.7}, {"asr": 1050.6}, {"asr": 1070.1}, {"asr": 1092.7}, {"asr": 1085.6}, {"asr": 1117.6}, {"asr": 1075.5}, {"asr": 1101.6}, {"asr": 1122.7}, {"asr": 1127.0}, {"asr": 1123.6}, {"asr": 1101.8}, {"asr": 1108.2}, {"asr": 1072.5}, {"asr": 1034.9}, {"asr": 1025.2}, {"asr": 1019.5}, {"asr": 1020.9}, {"asr": 982.2}, {"asr": 913.9}, {"asr": 956.0}, {"asr": 951.9}, {"asr": 979.0}, {"asr": 1010.0}, {"asr": 984.6}, {"asr": 964.0}, {"asr": 1006.1}, {"asr": 1109.8}, {"asr": 1073.8}, {"asr": 1051.9}, {"asr": 1050.9}, {"asr": 1054.6}, {"asr": 1002.2}, {"asr": 969.6}, {"asr": 994.1}, {"asr": 968.3}, {"asr": 1012.0}, {"asr": 1080.3}, {"asr": 1089.4}, {"asr": 1149.7}, {"asr": 1150.9}, {"asr": 1130.4}, {"asr": 1056.0}, {"asr": 1064.5}, {"asr": 1101.3}, {"asr": 1134.1}, {"asr": 1177.3}, {"asr": 1272.2}, {"asr": 1368.7}, {"asr": 1512.4}, {"asr": 1438.4}], [{"asr": 1344.6}, {"asr": 1201.9}, {"asr": 1125.5}, {"asr": 1094.4}, {"asr": 1116.4}, {"asr": 1090.8}, {"asr": 1114.2}, {"asr": 1106.4}, {"asr": 1111.7}, {"asr": 1162.8}, {"asr": 1155.3}, {"asr": 1129.1}, {"asr": 1095.7}, {"asr": 1055.6}, {"asr": 1066.6}, {"asr": 1053.7}, {"asr": 1023.9}, {"asr": 1006.9}, {"asr": 1001.9}, {"asr": 974.8}, {"asr": 977.3}, {"asr": 957.0}, {"asr": 976.8}, {"asr": 948.2}, {"asr": 961.2}, {"asr": 904.9}, {"asr": 911.8}, {"asr": 940.0}, {"asr": 892.8}, {"asr": 896.2}, {"asr": 895.0}, {"asr": 925.6}, {"asr": 982.0}, {"asr": 962.0}, {"asr": 890.6}, {"asr": 964.3}, {"asr": 952.0}, {"asr": 918.7}, {"asr": 935.6}, {"asr": 964.3}, {"asr": 994.9}, {"asr": 1030.8}, {"asr": 1070.7}, {"asr": 1077.3}, {"asr": 1089.8}, {"asr": 1102.2}, {"asr": 1115.6}, {"asr": 1167.0}, {"asr": 1215.8}, {"asr": 1201.0}, {"asr": 1224.2}, {"asr": 1168.0}], [{"asr": 1141.9}, {"asr": 1121.2}, {"asr": 1142.1}, {"asr": 1157.2}, {"asr": 1149.6}, {"asr": 1162.0}, {"asr": 1109.3}, {"asr": 1056.2}, {"asr": 1047.4}, {"asr": 1011.2}, {"asr": 1019.2}, {"asr": 983.0}, {"asr": 986.4}, {"asr": 998.0}, {"asr": 965.8}, {"asr": 951.1}, {"asr": 980.4}, {"asr": 996.8}, {"asr": 954.1}, {"asr": 983.9}, {"asr": 924.2}, {"asr": 918.2}, {"asr": 914.3}, {"asr": 934.6}, {"asr": 954.6}, {"asr": 1004.3}, {"asr": 903.1}, {"asr": 948.8}, {"asr": 946.6}, {"asr": 900.9}, {"asr": 932.3}, {"asr": 915.0}, {"asr": 966.3}, {"asr": 908.7}, {"asr": 939.8}, {"asr": 972.7}, {"asr": 918.5}, {"asr": 985.4}, {"asr": 987.8}, {"asr": 987.2}, {"asr": 1039.4}, {"asr": 1050.1}, {"asr": 1026.2}, {"asr": 1010.1}, {"asr": 1019.8}, {"asr": 1059.4}, {"asr": 1083.0}, {"asr": 1086.1}, {"asr": 1091.5}, {"asr": 1072.9}, {"asr": 1111.6}, {"asr": 1059.8}], [{"asr": 1098.5}, {"asr": 1129.3}, {"asr": 1107.5}, {"asr": 1184.5}, {"asr": 1153.6}, {"asr": 1151.6}, {"asr": 1168.8}, {"asr": 1198.5}, {"asr": 1164.6}, {"asr": 1129.3}, {"asr": 1110.4}, {"asr": 1089.8}, {"asr": 1047.4}, {"asr": 1020.8}, {"asr": 1013.8}, {"asr": 993.2}, {"asr": 923.7}, {"asr": 966.6}, {"asr": 906.8}, {"asr": 925.0}, {"asr": 902.2}, {"asr": 942.7}, {"asr": 911.8}, {"asr": 894.7}, {"asr": 893.3}, {"asr": 916.8}, {"asr": 931.6}, {"asr": 875.9}, {"asr": 904.5}, {"asr": 882.6}, {"asr": 857.7}, {"asr": 894.5}, {"asr": 945.1}, {"asr": 871.1}, {"asr": 897.7}, {"asr": 884.3}, {"asr": 869.9}, {"asr": 921.0}, {"asr": 898.4}, {"asr": 930.6}, {"asr": 962.4}, {"asr": 947.8}, {"asr": 1001.9}, {"asr": 976.0}, {"asr": 974.1}, {"asr": 981.7}, {"asr": 981.8}, {"asr": 1034.6}, {"asr": 1033.7}, {"asr": 1030.0}, {"asr": 1039.2}, {"asr": 1022.3}], [{"asr": 1132.1}, {"asr": 1196.9}, {"asr": 1191.9}, {"asr": 1132.6}, {"asr": 1138.6}, {"asr": 1135.4}, {"asr": 1130.9}, {"asr": 1104.6}, {"asr": 1081.5}, {"asr": 1018.0}, {"asr": 982.8}, {"asr": 968.8}, {"asr": 955.4}, {"asr": 968.2}, {"asr": 961.6}, {"asr": 973.1}, {"asr": 927.4}, {"asr": 950.1}, {"asr": 947.4}, {"asr": 910.7}, {"asr": 932.9}, {"asr": 923.6}, {"asr": 878.3}, {"asr": 871.5}, {"asr": 951.6}, {"asr": 1219.5}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}, {"asr": null}]], "source": "Destatis-Sonderauswertung 'Sterbefälle nach Tagen, Wochen und Monaten' (Altersgruppen je Woche, ab 2021). Direkt auf ESP2013 standardisiert, je Woche auf Jahresrate hochgerechnet (× 365,25/7). Bevölkerung je Altersgruppe: Eurostat demo_pjan, Stand 1. Januar (2026: Stand 2025). Absolutwert statt Abweichung, da die Historie (ab 2021) für eine Vorjahres-Baseline zu kurz ist."}}</script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("dashboard-data").textContent);
+  var root = document.querySelector(".viz-root");
+  var cs = getComputedStyle(root);
+  function cssVar(name) { return cs.getPropertyValue(name).trim(); }
+
+  var COLOR_1 = cssVar("--series-1");
+  var COLOR_2 = cssVar("--series-2");
+
+  function fmtInt(n) { return Math.round(n).toLocaleString("de-DE"); }
+  function fmtRate1(n) { return n == null ? "–" : n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function fmtPct(n) {
+    if (n == null) return "–";
+    var s = n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (n > 0 ? "+" : "") + s + " %";
+  }
+  function niceMax(v) {
+    var mag = Math.pow(10, Math.floor(Math.log10(v)));
+    var norm = v / mag;
+    var step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+    return step * mag;
+  }
+
+  // ---------- stat tiles ----------
+  (function renderStats() {
+    var s = DATA.summary;
+    var tiles = [
+      {
+        label: "Sterbefälle " + s.raw_latest_year + " (absolut)",
+        value: fmtInt(s.raw_latest_deaths),
+      },
+      {
+        label: "Altersstandardisierte Rate " + s.age_latest_year + " (je 100.000)",
+        value: fmtRate1(s.age_latest_asr),
+      },
+      {
+        label: "Vs. Ø 2015–2019 (altersstandardisiert)",
+        value: fmtPct(s.pct_change_vs_baseline),
+        delta: s.pct_change_vs_baseline,
+      },
+      {
+        label: "Höchststand seit 2020: " + s.peak_year,
+        value: fmtPct(s.peak_pct_vs_baseline),
+        delta: s.peak_pct_vs_baseline,
+      },
+    ];
+    var row = document.getElementById("stat-row");
+    tiles.forEach(function (t) {
+      var el = document.createElement("div");
+      el.className = "stat-tile";
+      var deltaHtml = "";
+      if (t.delta !== undefined) {
+        var cls = t.delta > 0 ? "up" : "down";
+        deltaHtml = '<div class="delta ' + cls + '">' + (t.delta > 0 ? "über" : "unter") + " Baseline</div>";
+      }
+      el.innerHTML =
+        '<div class="label"></div><div class="value"></div>' + deltaHtml;
+      el.querySelector(".label").textContent = t.label;
+      el.querySelector(".value").textContent = t.value;
+      row.appendChild(el);
+    });
+  })();
+
+  // ---------- generic line chart ----------
+  function renderLineChart(containerId, cfg) {
+    // cfg: {years, series:[{label,color,values}], yTickFmt, yDomainMin}
+    var container = document.getElementById(containerId);
+    var width = 460, height = 260;
+    var margin = { top: 14, right: 16, bottom: 26, left: 52 };
+    var innerW = width - margin.left - margin.right;
+    var innerH = height - margin.top - margin.bottom;
+
+    var years = cfg.years;
+    var allVals = [];
+    cfg.series.forEach(function (s) { allVals = allVals.concat(s.values); });
+    var dataMin = cfg.yDomainMin !== undefined ? cfg.yDomainMin : Math.min(0, Math.min.apply(null, allVals));
+    var dataMax = Math.max.apply(null, allVals);
+    var yMax = niceMax(dataMax * 1.08);
+    var yMin = dataMin;
+
+    function xPix(year) {
+      return margin.left + ((year - years[0]) / (years[years.length - 1] - years[0])) * innerW;
+    }
+    function yPix(v) {
+      return margin.top + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+    }
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("class", "chart-svg");
+    container.appendChild(svg);
+
+    // y gridlines + ticks
+    var yTickCount = 4;
+    for (var i = 0; i <= yTickCount; i++) {
+      var v = yMin + ((yMax - yMin) * i) / yTickCount;
+      var y = yPix(v);
+      var line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", margin.left);
+      line.setAttribute("x2", width - margin.right);
+      line.setAttribute("y1", y);
+      line.setAttribute("y2", y);
+      line.setAttribute("class", "gridline");
+      svg.appendChild(line);
+      var text = document.createElementNS(svgNS, "text");
+      text.setAttribute("x", margin.left - 8);
+      text.setAttribute("y", y + 3);
+      text.setAttribute("text-anchor", "end");
+      text.setAttribute("class", "axis-text");
+      text.textContent = cfg.yTickFmt(v);
+      svg.appendChild(text);
+    }
+
+    // x ticks
+    var span = years[years.length - 1] - years[0];
+    var xStep = span > 60 ? 10 : span > 30 ? 5 : 2;
+    years.forEach(function (yr) {
+      if (yr % xStep === 0) {
+        var text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", xPix(yr));
+        text.setAttribute("y", height - 6);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("class", "axis-text");
+        text.textContent = yr;
+        svg.appendChild(text);
+      }
+    });
+
+    // series lines + area (single series only) + end marker
+    cfg.series.forEach(function (s, si) {
+      if (cfg.series.length === 1) {
+        var areaPts = years.map(function (yr, i) { return xPix(yr) + "," + yPix(s.values[i]); }).join(" ");
+        var area = document.createElementNS(svgNS, "polygon");
+        var pts = xPix(years[0]) + "," + yPix(yMin) + " " + areaPts + " " + xPix(years[years.length - 1]) + "," + yPix(yMin);
+        area.setAttribute("points", pts);
+        area.setAttribute("fill", s.color);
+        area.setAttribute("opacity", "0.1");
+        svg.appendChild(area);
+      }
+
+      var d = years.map(function (yr, i) {
+        return (i === 0 ? "M" : "L") + xPix(yr) + "," + yPix(s.values[i]);
+      }).join(" ");
+      var path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", s.color);
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke-linejoin", "round");
+      path.setAttribute("stroke-linecap", "round");
+      svg.appendChild(path);
+
+      var lastX = xPix(years[years.length - 1]);
+      var lastY = yPix(s.values[s.values.length - 1]);
+      var dot = document.createElementNS(svgNS, "circle");
+      dot.setAttribute("cx", lastX);
+      dot.setAttribute("cy", lastY);
+      dot.setAttribute("r", 4);
+      dot.setAttribute("fill", s.color);
+      dot.setAttribute("stroke", cssVar("--surface-1"));
+      dot.setAttribute("stroke-width", 2);
+      svg.appendChild(dot);
+
+      if (cfg.series.length === 1) {
+        var lbl = document.createElementNS(svgNS, "text");
+        lbl.setAttribute("x", lastX - 6);
+        lbl.setAttribute("y", lastY - 10);
+        lbl.setAttribute("text-anchor", "end");
+        lbl.setAttribute("class", "axis-text");
+        lbl.setAttribute("fill", cssVar("--text-secondary"));
+        lbl.textContent = cfg.yTickFmt(s.values[s.values.length - 1]);
+        svg.appendChild(lbl);
+      }
+    });
+
+    // crosshair + tooltip
+    var crosshair = document.createElementNS(svgNS, "line");
+    crosshair.setAttribute("class", "crosshair-line");
+    crosshair.setAttribute("y1", margin.top);
+    crosshair.setAttribute("y2", margin.top + innerH);
+    crosshair.setAttribute("opacity", "0");
+    svg.appendChild(crosshair);
+
+    var hoverDots = cfg.series.map(function (s) {
+      var c = document.createElementNS(svgNS, "circle");
+      c.setAttribute("r", 4);
+      c.setAttribute("fill", s.color);
+      c.setAttribute("stroke", cssVar("--surface-1"));
+      c.setAttribute("stroke-width", 2);
+      c.setAttribute("opacity", "0");
+      svg.appendChild(c);
+      return c;
+    });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.style.position = "relative";
+    container.appendChild(tooltip);
+
+    var hitRect = document.createElementNS(svgNS, "rect");
+    hitRect.setAttribute("x", margin.left);
+    hitRect.setAttribute("y", 0);
+    hitRect.setAttribute("width", innerW);
+    hitRect.setAttribute("height", height);
+    hitRect.setAttribute("fill", "transparent");
+    svg.appendChild(hitRect);
+
+    function nearestIndex(px) {
+      var year = years[0] + ((px - margin.left) / innerW) * (years[years.length - 1] - years[0]);
+      var idx = Math.round(year - years[0]);
+      return Math.max(0, Math.min(years.length - 1, idx));
+    }
+
+    function onMove(evt) {
+      var rect = svg.getBoundingClientRect();
+      var scaleX = width / rect.width;
+      var px = (evt.clientX - rect.left) * scaleX;
+      var idx = nearestIndex(px);
+      var yr = years[idx];
+      var x = xPix(yr);
+      crosshair.setAttribute("x1", x);
+      crosshair.setAttribute("x2", x);
+      crosshair.setAttribute("opacity", "1");
+
+      var rows = "";
+      cfg.series.forEach(function (s, si) {
+        var val = s.values[idx];
+        hoverDots[si].setAttribute("cx", x);
+        hoverDots[si].setAttribute("cy", yPix(val));
+        hoverDots[si].setAttribute("opacity", "1");
+        rows +=
+          '<div class="t-row"><span class="key" style="background:' + s.color + '"></span>' +
+          '<span></span><span class="val"></span></div>';
+      });
+      tooltip.innerHTML = '<div class="t-year"></div>' + rows;
+      tooltip.querySelector(".t-year").textContent = yr;
+      var rowsEls = tooltip.querySelectorAll(".t-row");
+      cfg.series.forEach(function (s, si) {
+        rowsEls[si].querySelector("span:nth-child(2)").textContent = s.label;
+        rowsEls[si].querySelector(".val").textContent = cfg.yTickFmt(s.values[idx]);
+      });
+
+      var wrapRect = container.getBoundingClientRect();
+      var tx = (x / width) * wrapRect.width;
+      var ty = (yPix(cfg.series[0].values[idx]) / height) * wrapRect.height;
+      tooltip.style.opacity = "1";
+      var tW = tooltip.offsetWidth;
+      var left = tx + 14;
+      if (left + tW > wrapRect.width) left = tx - tW - 14;
+      tooltip.style.left = left + "px";
+      tooltip.style.top = Math.max(0, ty - 40) + "px";
+    }
+    function onLeave() {
+      crosshair.setAttribute("opacity", "0");
+      hoverDots.forEach(function (d) { d.setAttribute("opacity", "0"); });
+      tooltip.style.opacity = "0";
+    }
+    hitRect.addEventListener("pointermove", onMove);
+    hitRect.addEventListener("pointerleave", onLeave);
+  }
+
+  // ---------- chart 1: raw deaths absolute ----------
+  renderLineChart("chart-raw-deaths", {
+    years: DATA.raw_annual.years,
+    series: [{ label: "Sterbefälle", color: COLOR_1, values: DATA.raw_annual.deaths }],
+    yTickFmt: function (v) { return (v / 1000).toLocaleString("de-DE", { maximumFractionDigits: 0 }) + "k"; },
+  });
+
+  // ---------- chart 2: raw rate per 1000 ----------
+  renderLineChart("chart-raw-rate", {
+    years: DATA.raw_annual.years,
+    series: [{ label: "je 1.000 Einw.", color: COLOR_1, values: DATA.raw_annual.rate_per_1000 }],
+    yTickFmt: function (v) { return fmtRate1(v); },
+  });
+
+  // ---------- chart 3: age-standardized rate ----------
+  renderLineChart("chart-asr", {
+    years: DATA.age_adjusted.years,
+    series: [{ label: "je 100.000 (ESP2013)", color: COLOR_1, values: DATA.age_adjusted.age_std_rate_per_100k }],
+    yTickFmt: function (v) { return fmtInt(v); },
+  });
+
+  // ---------- chart 4: indexed comparison ----------
+  (function () {
+    var years = DATA.age_adjusted.years;
+    var crude = DATA.age_adjusted.crude_rate_per_1000;
+    var asr = DATA.age_adjusted.age_std_rate_per_100k;
+    var crudeIdx = crude.map(function (v) { return (v / crude[0]) * 100; });
+    var asrIdx = asr.map(function (v) { return (v / asr[0]) * 100; });
+
+    var legend = document.getElementById("legend-compare");
+    [["Rohe Rate (indexiert)", COLOR_1], ["Altersstandardisiert (indexiert)", COLOR_2]].forEach(function (pair) {
+      var el = document.createElement("span");
+      el.className = "key";
+      el.innerHTML = '<span class="swatch" style="background:' + pair[1] + '"></span><span></span>';
+      el.querySelector("span:last-child").textContent = pair[0];
+      legend.appendChild(el);
+    });
+
+    renderLineChart("chart-compare", {
+      years: years,
+      series: [
+        { label: "Rohe Rate (indexiert)", color: COLOR_1, values: crudeIdx },
+        { label: "Altersstandardisiert (indexiert)", color: COLOR_2, values: asrIdx },
+      ],
+      yTickFmt: function (v) { return fmtRate1(v); },
+    });
+  })();
+
+  // ---------- diverging color scale (blue = unter Baseline, red = ueber Baseline) ----------
+  var DIVERGE_DOMAIN = 25; // % Abweichung, ab hier volle Saettigung
+  var GRAY_MID = cssVar("--gridline");
+  function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    return [parseInt(hex.substr(0, 2), 16), parseInt(hex.substr(2, 2), 16), parseInt(hex.substr(4, 2), 16)];
+  }
+  function rgbToCss(rgb) { return "rgb(" + rgb.map(Math.round).join(",") + ")"; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpRgb(rgbA, rgbB, t) { return rgbA.map(function (v, i) { return lerp(v, rgbB[i], t); }); }
+  function divergingColor(pct) {
+    var t = Math.max(-1, Math.min(1, pct / DIVERGE_DOMAIN));
+    var gray = hexToRgb(GRAY_MID.trim().startsWith("#") ? GRAY_MID.trim() : "#c3c2b7");
+    var blue = hexToRgb(COLOR_1);
+    var red = hexToRgb(cssVar("--critical"));
+    if (t < 0) return rgbToCss(lerpRgb(gray, blue, -t));
+    return rgbToCss(lerpRgb(gray, red, t));
+  }
+
+  // ---------- generische Abweichungs-Heatmap: Spalte (Monat/KW) x Jahr ----------
+  function renderDeviationHeatmap(cfg) {
+    // cfg: {svgId, legendId, years, columns (Labels), cells, cellW, cellH,
+    //       labelEvery, colPrefix (fuer Tooltip, z.B. "" oder "KW")}
+    var years = cfg.years;
+    var columns = cfg.columns;
+    var container = document.getElementById(cfg.svgId);
+    var cellW = cfg.cellW, cellH = cfg.cellH;
+    var marginLeft = 44, marginTop = 18, marginRight = 4, marginBottom = 4;
+    var width = marginLeft + columns.length * cellW + marginRight;
+    var height = marginTop + years.length * cellH + marginBottom;
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("class", "chart-svg");
+    container.style.position = "relative";
+    container.appendChild(svg);
+
+    columns.forEach(function (c, ci) {
+      if (cfg.labelEvery > 1 && ci % cfg.labelEvery !== 0) return;
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft + ci * cellW + cellW / 2);
+      t.setAttribute("y", marginTop - 6);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("class", "axis-text");
+      t.textContent = c;
+      svg.appendChild(t);
+    });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.appendChild(tooltip);
+
+    years.forEach(function (yr, yi) {
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft - 8);
+      t.setAttribute("y", marginTop + yi * cellH + cellH / 2 + 4);
+      t.setAttribute("text-anchor", "end");
+      t.setAttribute("class", "axis-text");
+      t.textContent = yr;
+      svg.appendChild(t);
+
+      cfg.cells[yi].forEach(function (cell, ci) {
+        var hasData = cell.pct_vs_baseline != null;
+        var rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", marginLeft + ci * cellW + 1);
+        rect.setAttribute("y", marginTop + yi * cellH + 1);
+        rect.setAttribute("width", cellW - 2);
+        rect.setAttribute("height", cellH - 2);
+        rect.setAttribute("rx", Math.min(3, cellW / 4));
+        rect.setAttribute("fill", hasData ? divergingColor(cell.pct_vs_baseline) : "transparent");
+        if (hasData) {
+          rect.setAttribute("stroke", cssVar("--border"));
+          rect.setAttribute("stroke-width", "1");
+        }
+        svg.appendChild(rect);
+        if (!hasData) return; // Zeitraum noch nicht verfuegbar (laufendes Jahr)
+
+        rect.addEventListener("pointermove", function (evt) {
+          var wrapRect = container.getBoundingClientRect();
+          var svgRect = svg.getBoundingClientRect();
+          var scaleX = width / svgRect.width;
+          var scaleY = height / svgRect.height;
+          var cx = (evt.clientX - svgRect.left) * scaleX;
+          var cy = (evt.clientY - svgRect.top) * scaleY;
+          tooltip.innerHTML =
+            '<div class="t-year"></div><div class="t-row"><span></span><span class="val"></span></div>' +
+            '<div class="t-row"><span></span><span class="val"></span></div>';
+          tooltip.querySelector(".t-year").textContent = columns[ci] + " " + yr;
+          var rows = tooltip.querySelectorAll(".t-row");
+          rows[0].querySelector("span:first-child").textContent = "Sterbefälle";
+          rows[0].querySelector(".val").textContent = fmtInt(cell.deaths);
+          rows[1].querySelector("span:first-child").textContent = "vs. Vorjahresschnitt";
+          rows[1].querySelector(".val").textContent = fmtPct(cell.pct_vs_baseline);
+          tooltip.style.opacity = "1";
+          var tx = (cx / width) * wrapRect.width;
+          var ty = (cy / height) * wrapRect.height;
+          var tW = tooltip.offsetWidth;
+          var left = tx + 14;
+          if (left + tW > wrapRect.width) left = tx - tW - 14;
+          tooltip.style.left = left + "px";
+          tooltip.style.top = Math.max(0, ty - 44) + "px";
+        });
+        rect.addEventListener("pointerleave", function () { tooltip.style.opacity = "0"; });
+      });
+    });
+
+    // Legende: Farbverlauf -25% .. 0 .. +25%
+    var legend = document.getElementById(cfg.legendId);
+    var grad = document.createElement("div");
+    grad.className = "bar";
+    grad.style.background =
+      "linear-gradient(to right, " + divergingColor(-DIVERGE_DOMAIN) + ", " + divergingColor(0) + ", " + divergingColor(DIVERGE_DOMAIN) + ")";
+    var lo = document.createElement("span"); lo.textContent = "≤ −" + DIVERGE_DOMAIN + "% (weniger als üblich)";
+    var hi = document.createElement("span"); hi.textContent = "≥ +" + DIVERGE_DOMAIN + "% (mehr als üblich)";
+    legend.appendChild(lo); legend.appendChild(grad); legend.appendChild(hi);
+
+    // Tabellen-Fallback, gleiches Jahr-x-Spalte-Layout wie die Heatmap
+    renderTable(cfg.tableId, [
+      { label: "Jahr", values: years },
+    ].concat(columns.map(function (c, ci) {
+      return { label: c, values: years.map(function (yr, yi) { return cfg.cells[yi][ci].pct_vs_baseline; }), fmt: fmtPct };
+    })));
+  }
+
+  (function renderMonthlyHeatmap() {
+    var M = DATA.monthly;
+    document.getElementById("monthly-year-span").textContent = M.years[0] + "–" + M.years[M.years.length - 1];
+    document.getElementById("heatmap-source").textContent = "Quelle: " + M.source;
+    renderDeviationHeatmap({
+      svgId: "chart-heatmap", legendId: "heatmap-legend", tableId: "table-heatmap",
+      years: M.years, columns: M.months, cells: M.cells,
+      cellW: 54, cellH: 20, labelEvery: 1,
+    });
+  })();
+
+  // ---------- sequentielle Farbskala (1 Farbton, hell -> dunkel) fuer Absolutwerte ----------
+  function sequentialColor(value, min, max) {
+    var t = max > min ? (value - min) / (max - min) : 0;
+    t = Math.max(0, Math.min(1, t));
+    var light = hexToRgb("#cde2fb");
+    var dark = hexToRgb("#0d366b");
+    return rgbToCss(lerpRgb(light, dark, t));
+  }
+
+  function renderSequentialHeatmap(cfg) {
+    // cfg: {svgId, legendId, tableId, years, columns, cells (Array<Array<{asr}>>), cellW, cellH, labelEvery}
+    var years = cfg.years;
+    var columns = cfg.columns;
+    var vals = [];
+    cfg.cells.forEach(function (row) { row.forEach(function (c) { if (c.asr != null) vals.push(c.asr); }); });
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+
+    var container = document.getElementById(cfg.svgId);
+    var cellW = cfg.cellW, cellH = cfg.cellH;
+    var marginLeft = 44, marginTop = 18, marginRight = 4, marginBottom = 4;
+    var width = marginLeft + columns.length * cellW + marginRight;
+    var height = marginTop + years.length * cellH + marginBottom;
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("class", "chart-svg");
+    container.style.position = "relative";
+    container.appendChild(svg);
+
+    columns.forEach(function (c, ci) {
+      if (cfg.labelEvery > 1 && ci % cfg.labelEvery !== 0) return;
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft + ci * cellW + cellW / 2);
+      t.setAttribute("y", marginTop - 6);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("class", "axis-text");
+      t.textContent = c;
+      svg.appendChild(t);
+    });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.appendChild(tooltip);
+
+    years.forEach(function (yr, yi) {
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft - 8);
+      t.setAttribute("y", marginTop + yi * cellH + cellH / 2 + 4);
+      t.setAttribute("text-anchor", "end");
+      t.setAttribute("class", "axis-text");
+      t.textContent = yr;
+      svg.appendChild(t);
+
+      cfg.cells[yi].forEach(function (cell, ci) {
+        var hasData = cell.asr != null;
+        var rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", marginLeft + ci * cellW + 1);
+        rect.setAttribute("y", marginTop + yi * cellH + 1);
+        rect.setAttribute("width", cellW - 2);
+        rect.setAttribute("height", cellH - 2);
+        rect.setAttribute("rx", Math.min(3, cellW / 4));
+        rect.setAttribute("fill", hasData ? sequentialColor(cell.asr, min, max) : "transparent");
+        if (hasData) {
+          rect.setAttribute("stroke", cssVar("--border"));
+          rect.setAttribute("stroke-width", "1");
+        }
+        svg.appendChild(rect);
+        if (!hasData) return;
+
+        rect.addEventListener("pointermove", function (evt) {
+          var wrapRect = container.getBoundingClientRect();
+          var svgRect = svg.getBoundingClientRect();
+          var scaleX = width / svgRect.width;
+          var scaleY = height / svgRect.height;
+          var cx = (evt.clientX - svgRect.left) * scaleX;
+          var cy = (evt.clientY - svgRect.top) * scaleY;
+          tooltip.innerHTML =
+            '<div class="t-year"></div><div class="t-row"><span></span><span class="val"></span></div>';
+          tooltip.querySelector(".t-year").textContent = columns[ci] + " " + yr;
+          var row = tooltip.querySelector(".t-row");
+          row.querySelector("span:first-child").textContent = "Rate je 100.000";
+          row.querySelector(".val").textContent = fmtRate1(cell.asr);
+          tooltip.style.opacity = "1";
+          var tx = (cx / width) * wrapRect.width;
+          var ty = (cy / height) * wrapRect.height;
+          var tW = tooltip.offsetWidth;
+          var left = tx + 14;
+          if (left + tW > wrapRect.width) left = tx - tW - 14;
+          tooltip.style.left = left + "px";
+          tooltip.style.top = Math.max(0, ty - 44) + "px";
+        });
+        rect.addEventListener("pointerleave", function () { tooltip.style.opacity = "0"; });
+      });
+    });
+
+    var legend = document.getElementById(cfg.legendId);
+    var grad = document.createElement("div");
+    grad.className = "bar";
+    grad.style.background = "linear-gradient(to right, " + sequentialColor(min, min, max) + ", " + sequentialColor(max, min, max) + ")";
+    var lo = document.createElement("span"); lo.textContent = fmtRate1(min) + " je 100.000";
+    var hi = document.createElement("span"); hi.textContent = fmtRate1(max) + " je 100.000";
+    legend.appendChild(lo); legend.appendChild(grad); legend.appendChild(hi);
+
+    renderTable(cfg.tableId, [
+      { label: "Jahr", values: years },
+    ].concat(columns.map(function (c, ci) {
+      return { label: c, values: years.map(function (yr, yi) { return cfg.cells[yi][ci].asr; }), fmt: fmtRate1 };
+    })));
+  }
+
+  (function renderWeeklyHeatmapController() {
+    var W = DATA.monthly.weekly;
+    var WA = DATA.weekly_age_adjusted;
+    var kwLabelsRaw = [];
+    for (var i = 1; i <= W.max_kw; i++) kwLabelsRaw.push("KW" + i);
+    var kwLabelsAge = [];
+    for (var j = 1; j <= WA.max_kw; j++) kwLabelsAge.push("KW" + j);
+
+    var metricRow = document.getElementById("heatmap-week-metric-buttons");
+    var METRICS = [
+      { key: "raw", label: "Rohdaten (2000–2026)" },
+      { key: "age", label: "Altersstandardisiert (2021–2026)" },
+    ];
+    var state = { metric: "raw" };
+
+    function makeBtn(label, onClick) {
+      var b = document.createElement("button");
+      b.className = "period-btn";
+      b.type = "button";
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    }
+    var metricBtns = METRICS.map(function (mt) {
+      var b = makeBtn(mt.label, function () { state.metric = mt.key; update(); });
+      metricRow.appendChild(b);
+      return b;
+    });
+
+    function update() {
+      metricBtns.forEach(function (b, i) { b.classList.toggle("active", METRICS[i].key === state.metric); });
+      document.getElementById("chart-heatmap-week").innerHTML = "";
+      document.getElementById("heatmap-week-legend").innerHTML = "";
+
+      if (state.metric === "raw") {
+        document.getElementById("heatmap-week-title").textContent = "Abweichung vom Vorjahres-Durchschnitt, je Kalenderwoche und Jahr";
+        document.getElementById("heatmap-week-source").textContent =
+          "Quelle: Eurostat demo_r_mwk_ts (2000–2020) + Destatis-Sonderauswertung (ab 2021), Gestorbene je ISO-Woche, Deutschland. Baseline je Zelle = Mittelwert derselben Kalenderwoche in den bis zu 5 vorangehenden Jahren (gleitend, min. 3 Vorjahre). Letzte 1–2 Wochen vorläufig.";
+        renderDeviationHeatmap({
+          svgId: "chart-heatmap-week", legendId: "heatmap-week-legend", tableId: "table-weekly",
+          years: W.years, columns: kwLabelsRaw, cells: W.cells,
+          cellW: 16, cellH: 20, labelEvery: 4,
+        });
+      } else {
+        document.getElementById("heatmap-week-title").textContent = "Altersstandardisierte Rate (ESP2013, annualisiert), je Kalenderwoche und Jahr";
+        document.getElementById("heatmap-week-source").textContent = "Quelle: " + WA.source;
+        renderSequentialHeatmap({
+          svgId: "chart-heatmap-week", legendId: "heatmap-week-legend", tableId: "table-weekly",
+          years: WA.years, columns: kwLabelsAge, cells: WA.cells,
+          cellW: 16, cellH: 20, labelEvery: 4,
+        });
+      }
+    }
+
+    update();
+  })();
+
+  // ---------- Saison-/Monatswahl -> Liniendiagramm ----------
+  (function renderSeasonPicker() {
+    var M = DATA.monthly;
+    var MA = DATA.monthly_age_adjusted;
+    var monthNames = M.months;
+    var monthlyDeaths = M.monthly_deaths; // { "2000": [Jan..Dez oder null], ... }
+    var monthlyAsr = MA.age_std_rate_per_100k_annualized; // { "2021": [Jan..Dez oder null], ... }
+    var allYears = Object.keys(monthlyDeaths).map(Number).sort(function (a, b) { return a - b; });
+    var asrYears = Object.keys(monthlyAsr).map(Number).sort(function (a, b) { return a - b; });
+
+    var SEASONS = [
+      { key: "winter", label: "Winter (Dez–Feb)", months: [12, 1, 2], wraps: true },
+      { key: "spring", label: "Frühling (Mär–Mai)", months: [3, 4, 5], wraps: false },
+      { key: "summer", label: "Sommer (Jun–Aug)", months: [6, 7, 8], wraps: false },
+      { key: "autumn", label: "Herbst (Sep–Nov)", months: [9, 10, 11], wraps: false },
+    ];
+
+    var state = { metric: "raw", mode: "season", seasonKey: "summer", month: 7 };
+
+    function rawWindowSeries(monthsList, wraps) {
+      var out = { years: [], values: [] };
+      allYears.forEach(function (y) {
+        var sum = 0, ok = true;
+        monthsList.forEach(function (m) {
+          var yy = wraps && m === 12 ? y - 1 : y; // Basisjahr y = Jahr des letzten Fenstermonats (Feb)
+          var arr = monthlyDeaths[String(yy)];
+          if (!arr || arr[m - 1] == null) { ok = false; return; }
+          sum += arr[m - 1];
+        });
+        if (ok) { out.years.push(y); out.values.push(sum); }
+      });
+      return out;
+    }
+
+    // ASR ist eine Rate, keine Menge -> ueber das Fenster mitteln statt summieren.
+    function asrWindowSeries(monthsList, wraps) {
+      var out = { years: [], values: [] };
+      asrYears.forEach(function (y) {
+        var vals = [], ok = true;
+        monthsList.forEach(function (m) {
+          var yy = wraps && m === 12 ? y - 1 : y;
+          var arr = monthlyAsr[String(yy)];
+          if (!arr || arr[m - 1] == null) { ok = false; return; }
+          vals.push(arr[m - 1]);
+        });
+        if (ok) {
+          var mean = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+          out.years.push(y); out.values.push(Math.round(mean * 10) / 10);
+        }
+      });
+      return out;
+    }
+
+    function currentSeries() {
+      var isAge = state.metric === "age";
+      if (state.mode === "month") {
+        var out = { years: [], values: [] };
+        var src = isAge ? monthlyAsr : monthlyDeaths;
+        var years = isAge ? asrYears : allYears;
+        years.forEach(function (y) {
+          var arr = src[String(y)];
+          if (arr && arr[state.month - 1] != null) { out.years.push(y); out.values.push(arr[state.month - 1]); }
+        });
+        return { series: out, title: monthNames[state.month - 1] };
+      }
+      var season = SEASONS.filter(function (s) { return s.key === state.seasonKey; })[0];
+      var series = isAge ? asrWindowSeries(season.months, season.wraps) : rawWindowSeries(season.months, season.wraps);
+      return { series: series, title: season.label };
+    }
+
+    var metricRow = document.getElementById("metric-buttons");
+    var seasonRow = document.getElementById("season-buttons");
+    var monthRow = document.getElementById("month-buttons");
+
+    function makeBtn(label, onClick) {
+      var b = document.createElement("button");
+      b.className = "period-btn";
+      b.type = "button";
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    var METRICS = [
+      { key: "raw", label: "Rohdaten (2000–2026)" },
+      { key: "age", label: "Altersstandardisiert (2021–2026)" },
+    ];
+    var metricBtns = METRICS.map(function (mt) {
+      var b = makeBtn(mt.label, function () {
+        state.metric = mt.key;
+        updateButtons(); renderSeasonChart();
+      });
+      metricRow.appendChild(b);
+      return b;
+    });
+
+    var seasonBtns = SEASONS.map(function (s) {
+      var b = makeBtn(s.label, function () {
+        state.mode = "season"; state.seasonKey = s.key;
+        updateButtons(); renderSeasonChart();
+      });
+      seasonRow.appendChild(b);
+      return b;
+    });
+    var monthBtns = monthNames.map(function (name, i) {
+      var b = makeBtn(name, function () {
+        state.mode = "month"; state.month = i + 1;
+        updateButtons(); renderSeasonChart();
+      });
+      monthRow.appendChild(b);
+      return b;
+    });
+
+    function updateButtons() {
+      metricBtns.forEach(function (b, i) { b.classList.toggle("active", METRICS[i].key === state.metric); });
+      seasonBtns.forEach(function (b, i) {
+        b.classList.toggle("active", state.mode === "season" && SEASONS[i].key === state.seasonKey);
+      });
+      monthBtns.forEach(function (b, i) {
+        b.classList.toggle("active", state.mode === "month" && state.month === i + 1);
+      });
+    }
+
+    function renderSeasonChart() {
+      var current = currentSeries();
+      var isAge = state.metric === "age";
+      var container = document.getElementById("chart-season");
+      container.innerHTML = "";
+      var metricLabel = isAge ? "Altersstandardisierte Rate (je 100.000, annualisiert)" : "Sterbefälle";
+      document.getElementById("season-chart-title").textContent = metricLabel + " im gewählten Zeitraum, je Jahr — " + current.title;
+      document.getElementById("season-chart-source").textContent = "Quelle: " + (isAge ? MA.source : "Eurostat demo_r_mwk_ts (2000–2020) + Destatis-Sonderauswertung (ab 2021, aktuellster Stand), taggenau zu Kalendermonaten aggregiert. Letzte 1–2 Wochen vorläufig.");
+      renderLineChart("chart-season", {
+        years: current.series.years,
+        series: [{ label: current.title, color: COLOR_1, values: current.series.values }],
+        yTickFmt: isAge ? function (v) { return fmtRate1(v); } : function (v) { return fmtInt(v); },
+      });
+    }
+
+    updateButtons();
+    renderSeasonChart();
+  })();
+
+  // ---------- tables ----------
+  function renderTable(containerId, cols) {
+    var container = document.getElementById(containerId);
+    var table = document.createElement("table");
+    table.className = "data-table";
+    var thead = "<thead><tr>" + cols.map(function (c) { return "<th></th>"; }).join("") + "</tr></thead>";
+    table.innerHTML = thead;
+    var headCells = table.querySelectorAll("th");
+    cols.forEach(function (c, i) { headCells[i].textContent = c.label; });
+    var tbody = document.createElement("tbody");
+    var n = cols[0].values.length;
+    for (var r = 0; r < n; r++) {
+      var tr = document.createElement("tr");
+      cols.forEach(function (c) {
+        var td = document.createElement("td");
+        td.textContent = c.fmt ? c.fmt(c.values[r]) : c.values[r];
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  renderTable("table-raw", [
+    { label: "Jahr", values: DATA.raw_annual.years },
+    { label: "Sterbefälle", values: DATA.raw_annual.deaths, fmt: fmtInt },
+    { label: "je 1.000 Einw.", values: DATA.raw_annual.rate_per_1000, fmt: fmtRate1 },
+  ]);
+
+  renderTable("table-age", [
+    { label: "Jahr", values: DATA.age_adjusted.years },
+    { label: "Sterbefälle", values: DATA.age_adjusted.deaths, fmt: fmtInt },
+    { label: "je 1.000 (roh)", values: DATA.age_adjusted.crude_rate_per_1000, fmt: fmtRate1 },
+    { label: "je 100.000 (ESP2013)", values: DATA.age_adjusted.age_std_rate_per_100k, fmt: fmtRate1 },
+    { label: "vs. Ø 2015–19", values: DATA.age_adjusted.pct_vs_baseline, fmt: fmtPct },
+  ]);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Übersterblichkeit Deutschland — 1946–2024</title>
+<style>
+  .viz-root {
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6; /* blue */
+    --series-2:       #1baf7a; /* aqua */
+    --good:           #0ca30c;
+    --critical:       #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #199e70;
+      --good:           #0ca30c;
+      --critical:       #e66767;
+    }
+  }
+  .viz-root {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    padding: 32px 24px 64px;
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+  .viz-root h1 { font-size: 26px; font-weight: 650; margin: 0 0 6px; }
+  .viz-root .lede { color: var(--text-secondary); font-size: 15px; max-width: 720px; line-height: 1.5; margin: 0 0 28px; }
+  .viz-root .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 40px; }
+  .viz-root .stat-tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .viz-root .stat-tile .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+  .viz-root .stat-tile .value { font-size: 28px; font-weight: 650; line-height: 1.1; }
+  .viz-root .stat-tile .delta { font-size: 13px; margin-top: 4px; font-weight: 550; }
+  .viz-root .stat-tile .delta.up { color: var(--critical); }
+  .viz-root .stat-tile .delta.down { color: var(--good); }
+  .viz-root section.block { margin-bottom: 48px; }
+  .viz-root section.block > h2 { font-size: 19px; font-weight: 650; margin: 0 0 4px; }
+  .viz-root section.block > .block-note { color: var(--text-secondary); font-size: 14px; margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .viz-root .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 780px) { .viz-root .chart-grid { grid-template-columns: 1fr; } }
+  .viz-root .chart-card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 18px 8px;
+  }
+  .viz-root .chart-card.full { grid-column: 1 / -1; }
+  .viz-root .chart-card h3 { font-size: 15px; font-weight: 620; margin: 0 0 2px; }
+  .viz-root .chart-card .source { font-size: 11.5px; color: var(--text-muted); margin: 6px 0 2px; }
+  .viz-root .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin: 4px 0 8px; }
+  .viz-root .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+  .viz-root .legend .swatch { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+  .viz-root .chart-svg-wrap { position: relative; }
+  .viz-root svg.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .viz-root .gridline { stroke: var(--gridline); stroke-width: 1; }
+  .viz-root .axis-text { fill: var(--text-muted); font-size: 11px; }
+  .viz-root .crosshair-line { stroke: var(--baseline); stroke-width: 1; }
+  .viz-root .tooltip {
+    position: absolute; pointer-events: none; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.08s;
+    white-space: nowrap; z-index: 5;
+  }
+  .viz-root .tooltip .t-year { color: var(--text-secondary); font-size: 11px; margin-bottom: 3px; }
+  .viz-root .tooltip .t-row { display: flex; align-items: center; gap: 6px; }
+  .viz-root .tooltip .t-row .key { width: 10px; height: 2px; border-radius: 1px; display: inline-block; }
+  .viz-root .tooltip .t-row .val { font-weight: 650; color: var(--text-primary); margin-left: auto; padding-left: 10px; font-variant-numeric: tabular-nums; }
+  .viz-root details.table-toggle { margin-top: 10px; }
+  .viz-root details.table-toggle summary { cursor: pointer; font-size: 12.5px; color: var(--text-secondary); padding: 6px 0; }
+  .viz-root table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin: 8px 0 12px; }
+  .viz-root table.data-table th, .viz-root table.data-table td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--gridline); white-space: nowrap; }
+  .viz-root table.data-table th:first-child, .viz-root table.data-table td:first-child { text-align: left; }
+  .viz-root .table-scroll { max-height: 320px; overflow-y: auto; overflow-x: auto; }
+  .viz-root footer { color: var(--text-muted); font-size: 12px; margin-top: 40px; line-height: 1.6; border-top: 1px solid var(--gridline); padding-top: 16px; }
+  .viz-root footer a { color: var(--text-secondary); }
+
+  .viz-root .heatmap-legend { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); margin: 4px 0 10px; }
+  .viz-root .heatmap-legend .bar { width: 160px; height: 10px; border-radius: 5px; }
+  .viz-root .heat-cell-label { font-size: 10px; fill: var(--text-muted); }
+  .viz-root .period-picker { margin-bottom: 14px; }
+  .viz-root .period-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .viz-root button.period-btn {
+    font-family: inherit; font-size: 12.5px; color: var(--text-secondary);
+    background: var(--page); border: 1px solid var(--border); border-radius: 7px;
+    padding: 5px 11px; cursor: pointer;
+  }
+  .viz-root button.period-btn:hover { color: var(--text-primary); }
+  .viz-root button.period-btn.active {
+    background: var(--series-1); border-color: var(--series-1); color: #fff; font-weight: 600;
+  }
+</style>
+
+</head>
+<body>
+<div class="viz-root">
+  <h1>Übersterblichkeit Deutschland</h1>
+  <p class="lede">
+    Sterbefallzahlen für Deutschland über die letzten Jahrzehnte — zuerst als Rohdaten
+    (absolute Sterbefälle und rohe Sterberate, 1946–2024), danach altersstandardisiert
+    nach der European Standard Population 2013 (1991–2024), um den Effekt der alternden
+    Bevölkerung herauszurechnen.
+  </p>
+
+  <div class="stat-row" id="stat-row"></div>
+
+  <section class="block">
+    <h2>Rohdaten</h2>
+    <p class="block-note">
+      Absolute Sterbefallzahlen wachsen strukturell mit einer größer und älter werdenden
+      Bevölkerung — sie zeigen noch keine „Übersterblichkeit“, sondern den demografischen
+      Grundtrend.
+    </p>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Sterbefälle absolut, 1946–2024</h3>
+        <div class="chart-svg-wrap" id="chart-raw-deaths"></div>
+        <p class="source">Quelle: Destatis, Zeitreihen 1841–2024, Gebiet Deutschland (jeweils aktueller Gebietsstand)</p>
+      </div>
+      <div class="chart-card">
+        <h3>Rohe Sterberate je 1.000 Einwohner, 1946–2024</h3>
+        <div class="chart-svg-wrap" id="chart-raw-rate"></div>
+        <p class="source">Quelle: Destatis, Zeitreihen 1841–2024, Gebiet Deutschland (jeweils aktueller Gebietsstand)</p>
+      </div>
+    </div>
+    <details class="table-toggle">
+      <summary>Rohdaten als Tabelle anzeigen</summary>
+      <div class="table-scroll" id="table-raw"></div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h2>Altersstandardisiert (ESP2013)</h2>
+    <p class="block-note">
+      Direkte Altersstandardisierung auf die European Standard Population 2013 macht Jahre
+      unabhängig von der jeweiligen Altersstruktur vergleichbar. Nur ab 1991 verfügbar, da
+      die altersspezifischen Eurostat-Reihen erst dann auf wiedervereinigtem Gebiet konsistent
+      sind (vorher Westdeutschland-only).
+    </p>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Altersstandardisierte Sterberate je 100.000, 1991–2024</h3>
+        <div class="chart-svg-wrap" id="chart-asr"></div>
+        <p class="source">Quelle: Eurostat demo_magec / demo_pjan (geo=DE), standardisiert auf ESP2013</p>
+      </div>
+      <div class="chart-card">
+        <h3>Rohe vs. altersstandardisierte Rate (indexiert, 1991 = 100)</h3>
+        <div class="legend" id="legend-compare"></div>
+        <div class="chart-svg-wrap" id="chart-compare"></div>
+        <p class="source">Zeigt, wie viel des Anstiegs der rohen Rate durch die alternde Bevölkerung erklärt wird</p>
+      </div>
+    </div>
+    <details class="table-toggle">
+      <summary>Altersstandardisierte Daten als Tabelle anzeigen</summary>
+      <div class="table-scroll" id="table-age"></div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h2>Saisonale Übersterblichkeit</h2>
+    <p class="block-note">
+      Monatswerte über <span id="monthly-year-span"></span>, jede Zelle verglichen mit dem
+      gleitenden Durchschnitt desselben Kalendermonats in den bis zu 5 vorangehenden Jahren —
+      so werden echte Ausschläge (Hitzewellen, Grippewellen, Pandemie-Wellen) sichtbar statt
+      vom demografischen Alterungstrend überdeckt zu werden.
+    </p>
+    <div class="chart-card full">
+      <h3>Abweichung vom Vorjahres-Durchschnitt, je Monat und Jahr</h3>
+      <div id="heatmap-legend" class="heatmap-legend"></div>
+      <div class="chart-svg-wrap" id="chart-heatmap"></div>
+      <p class="source" id="heatmap-source"></p>
+      <details class="table-toggle">
+        <summary>Als Tabelle anzeigen</summary>
+        <div class="table-scroll" id="table-heatmap"></div>
+      </details>
+    </div>
+
+    <div class="chart-card full" style="margin-top:20px;">
+      <h3 id="heatmap-week-title">Abweichung vom Vorjahres-Durchschnitt, je Kalenderwoche und Jahr</h3>
+      <div class="period-row" id="heatmap-week-metric-buttons" style="margin-bottom:10px;"></div>
+      <div id="heatmap-week-legend" class="heatmap-legend"></div>
+      <div class="chart-svg-wrap" id="chart-heatmap-week"></div>
+      <p class="source" id="heatmap-week-source"></p>
+      <details class="table-toggle">
+        <summary>Als Tabelle anzeigen</summary>
+        <div class="table-scroll" id="table-weekly"></div>
+      </details>
+    </div>
+
+    <div class="chart-card full" style="margin-top:20px;">
+      <h3 id="season-chart-title">Sterbefälle im gewählten Zeitraum, je Jahr</h3>
+      <div class="period-picker">
+        <div class="period-row" id="metric-buttons"></div>
+        <div class="period-row" id="season-buttons"></div>
+        <div class="period-row" id="month-buttons"></div>
+      </div>
+      <div class="chart-svg-wrap" id="chart-season"></div>
+      <p class="source" id="season-chart-source"></p>
+    </div>
+  </section>
+
+  <footer>
+    Rohdaten: Statistisches Bundesamt (Destatis), Statistischer Bericht „Ehescheidungen,
+    Eheschließungen, Geborene und Gestorbene – Zeitreihen 1841–2024“, Gebiet Deutschland
+    (rückwirkend auf jeweils aktuellem Gebietsstand kombiniert). ·
+    Altersstandardisierung: Eurostat, demo_magec (Gestorbene nach Einzelalter) und demo_pjan
+    (Bevölkerung nach Einzelalter), geo=DE, direkt standardisiert auf die European Standard
+    Population 2013 (ESP2013), 19 Altersgruppen. ·
+    Monatsdaten: Eurostat demo_r_mwk_ts (2000–2020) und Destatis-Sonderauswertung
+    „Sterbefälle nach Tagen, Wochen und Monaten“ (ab 2021, laufend aktualisiert),
+    taggenau auf Kalendermonate verteilt. Erstellt am __BUILD_DATE__.
+  </footer>
+</div>
+
+<script id="dashboard-data" type="application/json">__DATA_JSON__</script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("dashboard-data").textContent);
+  var root = document.querySelector(".viz-root");
+  var cs = getComputedStyle(root);
+  function cssVar(name) { return cs.getPropertyValue(name).trim(); }
+
+  var COLOR_1 = cssVar("--series-1");
+  var COLOR_2 = cssVar("--series-2");
+
+  function fmtInt(n) { return Math.round(n).toLocaleString("de-DE"); }
+  function fmtRate1(n) { return n == null ? "–" : n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function fmtPct(n) {
+    if (n == null) return "–";
+    var s = n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (n > 0 ? "+" : "") + s + " %";
+  }
+  function niceMax(v) {
+    var mag = Math.pow(10, Math.floor(Math.log10(v)));
+    var norm = v / mag;
+    var step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+    return step * mag;
+  }
+
+  // ---------- stat tiles ----------
+  (function renderStats() {
+    var s = DATA.summary;
+    var tiles = [
+      {
+        label: "Sterbefälle " + s.raw_latest_year + " (absolut)",
+        value: fmtInt(s.raw_latest_deaths),
+      },
+      {
+        label: "Altersstandardisierte Rate " + s.age_latest_year + " (je 100.000)",
+        value: fmtRate1(s.age_latest_asr),
+      },
+      {
+        label: "Vs. Ø 2015–2019 (altersstandardisiert)",
+        value: fmtPct(s.pct_change_vs_baseline),
+        delta: s.pct_change_vs_baseline,
+      },
+      {
+        label: "Höchststand seit 2020: " + s.peak_year,
+        value: fmtPct(s.peak_pct_vs_baseline),
+        delta: s.peak_pct_vs_baseline,
+      },
+    ];
+    var row = document.getElementById("stat-row");
+    tiles.forEach(function (t) {
+      var el = document.createElement("div");
+      el.className = "stat-tile";
+      var deltaHtml = "";
+      if (t.delta !== undefined) {
+        var cls = t.delta > 0 ? "up" : "down";
+        deltaHtml = '<div class="delta ' + cls + '">' + (t.delta > 0 ? "über" : "unter") + " Baseline</div>";
+      }
+      el.innerHTML =
+        '<div class="label"></div><div class="value"></div>' + deltaHtml;
+      el.querySelector(".label").textContent = t.label;
+      el.querySelector(".value").textContent = t.value;
+      row.appendChild(el);
+    });
+  })();
+
+  // ---------- generic line chart ----------
+  function renderLineChart(containerId, cfg) {
+    // cfg: {years, series:[{label,color,values}], yTickFmt, yDomainMin}
+    var container = document.getElementById(containerId);
+    var width = 460, height = 260;
+    var margin = { top: 14, right: 16, bottom: 26, left: 52 };
+    var innerW = width - margin.left - margin.right;
+    var innerH = height - margin.top - margin.bottom;
+
+    var years = cfg.years;
+    var allVals = [];
+    cfg.series.forEach(function (s) { allVals = allVals.concat(s.values); });
+    var dataMin = cfg.yDomainMin !== undefined ? cfg.yDomainMin : Math.min(0, Math.min.apply(null, allVals));
+    var dataMax = Math.max.apply(null, allVals);
+    var yMax = niceMax(dataMax * 1.08);
+    var yMin = dataMin;
+
+    function xPix(year) {
+      return margin.left + ((year - years[0]) / (years[years.length - 1] - years[0])) * innerW;
+    }
+    function yPix(v) {
+      return margin.top + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+    }
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("class", "chart-svg");
+    container.appendChild(svg);
+
+    // y gridlines + ticks
+    var yTickCount = 4;
+    for (var i = 0; i <= yTickCount; i++) {
+      var v = yMin + ((yMax - yMin) * i) / yTickCount;
+      var y = yPix(v);
+      var line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", margin.left);
+      line.setAttribute("x2", width - margin.right);
+      line.setAttribute("y1", y);
+      line.setAttribute("y2", y);
+      line.setAttribute("class", "gridline");
+      svg.appendChild(line);
+      var text = document.createElementNS(svgNS, "text");
+      text.setAttribute("x", margin.left - 8);
+      text.setAttribute("y", y + 3);
+      text.setAttribute("text-anchor", "end");
+      text.setAttribute("class", "axis-text");
+      text.textContent = cfg.yTickFmt(v);
+      svg.appendChild(text);
+    }
+
+    // x ticks
+    var span = years[years.length - 1] - years[0];
+    var xStep = span > 60 ? 10 : span > 30 ? 5 : 2;
+    years.forEach(function (yr) {
+      if (yr % xStep === 0) {
+        var text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", xPix(yr));
+        text.setAttribute("y", height - 6);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("class", "axis-text");
+        text.textContent = yr;
+        svg.appendChild(text);
+      }
+    });
+
+    // series lines + area (single series only) + end marker
+    cfg.series.forEach(function (s, si) {
+      if (cfg.series.length === 1) {
+        var areaPts = years.map(function (yr, i) { return xPix(yr) + "," + yPix(s.values[i]); }).join(" ");
+        var area = document.createElementNS(svgNS, "polygon");
+        var pts = xPix(years[0]) + "," + yPix(yMin) + " " + areaPts + " " + xPix(years[years.length - 1]) + "," + yPix(yMin);
+        area.setAttribute("points", pts);
+        area.setAttribute("fill", s.color);
+        area.setAttribute("opacity", "0.1");
+        svg.appendChild(area);
+      }
+
+      var d = years.map(function (yr, i) {
+        return (i === 0 ? "M" : "L") + xPix(yr) + "," + yPix(s.values[i]);
+      }).join(" ");
+      var path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", s.color);
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke-linejoin", "round");
+      path.setAttribute("stroke-linecap", "round");
+      svg.appendChild(path);
+
+      var lastX = xPix(years[years.length - 1]);
+      var lastY = yPix(s.values[s.values.length - 1]);
+      var dot = document.createElementNS(svgNS, "circle");
+      dot.setAttribute("cx", lastX);
+      dot.setAttribute("cy", lastY);
+      dot.setAttribute("r", 4);
+      dot.setAttribute("fill", s.color);
+      dot.setAttribute("stroke", cssVar("--surface-1"));
+      dot.setAttribute("stroke-width", 2);
+      svg.appendChild(dot);
+
+      if (cfg.series.length === 1) {
+        var lbl = document.createElementNS(svgNS, "text");
+        lbl.setAttribute("x", lastX - 6);
+        lbl.setAttribute("y", lastY - 10);
+        lbl.setAttribute("text-anchor", "end");
+        lbl.setAttribute("class", "axis-text");
+        lbl.setAttribute("fill", cssVar("--text-secondary"));
+        lbl.textContent = cfg.yTickFmt(s.values[s.values.length - 1]);
+        svg.appendChild(lbl);
+      }
+    });
+
+    // crosshair + tooltip
+    var crosshair = document.createElementNS(svgNS, "line");
+    crosshair.setAttribute("class", "crosshair-line");
+    crosshair.setAttribute("y1", margin.top);
+    crosshair.setAttribute("y2", margin.top + innerH);
+    crosshair.setAttribute("opacity", "0");
+    svg.appendChild(crosshair);
+
+    var hoverDots = cfg.series.map(function (s) {
+      var c = document.createElementNS(svgNS, "circle");
+      c.setAttribute("r", 4);
+      c.setAttribute("fill", s.color);
+      c.setAttribute("stroke", cssVar("--surface-1"));
+      c.setAttribute("stroke-width", 2);
+      c.setAttribute("opacity", "0");
+      svg.appendChild(c);
+      return c;
+    });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.style.position = "relative";
+    container.appendChild(tooltip);
+
+    var hitRect = document.createElementNS(svgNS, "rect");
+    hitRect.setAttribute("x", margin.left);
+    hitRect.setAttribute("y", 0);
+    hitRect.setAttribute("width", innerW);
+    hitRect.setAttribute("height", height);
+    hitRect.setAttribute("fill", "transparent");
+    svg.appendChild(hitRect);
+
+    function nearestIndex(px) {
+      var year = years[0] + ((px - margin.left) / innerW) * (years[years.length - 1] - years[0]);
+      var idx = Math.round(year - years[0]);
+      return Math.max(0, Math.min(years.length - 1, idx));
+    }
+
+    function onMove(evt) {
+      var rect = svg.getBoundingClientRect();
+      var scaleX = width / rect.width;
+      var px = (evt.clientX - rect.left) * scaleX;
+      var idx = nearestIndex(px);
+      var yr = years[idx];
+      var x = xPix(yr);
+      crosshair.setAttribute("x1", x);
+      crosshair.setAttribute("x2", x);
+      crosshair.setAttribute("opacity", "1");
+
+      var rows = "";
+      cfg.series.forEach(function (s, si) {
+        var val = s.values[idx];
+        hoverDots[si].setAttribute("cx", x);
+        hoverDots[si].setAttribute("cy", yPix(val));
+        hoverDots[si].setAttribute("opacity", "1");
+        rows +=
+          '<div class="t-row"><span class="key" style="background:' + s.color + '"></span>' +
+          '<span></span><span class="val"></span></div>';
+      });
+      tooltip.innerHTML = '<div class="t-year"></div>' + rows;
+      tooltip.querySelector(".t-year").textContent = yr;
+      var rowsEls = tooltip.querySelectorAll(".t-row");
+      cfg.series.forEach(function (s, si) {
+        rowsEls[si].querySelector("span:nth-child(2)").textContent = s.label;
+        rowsEls[si].querySelector(".val").textContent = cfg.yTickFmt(s.values[idx]);
+      });
+
+      var wrapRect = container.getBoundingClientRect();
+      var tx = (x / width) * wrapRect.width;
+      var ty = (yPix(cfg.series[0].values[idx]) / height) * wrapRect.height;
+      tooltip.style.opacity = "1";
+      var tW = tooltip.offsetWidth;
+      var left = tx + 14;
+      if (left + tW > wrapRect.width) left = tx - tW - 14;
+      tooltip.style.left = left + "px";
+      tooltip.style.top = Math.max(0, ty - 40) + "px";
+    }
+    function onLeave() {
+      crosshair.setAttribute("opacity", "0");
+      hoverDots.forEach(function (d) { d.setAttribute("opacity", "0"); });
+      tooltip.style.opacity = "0";
+    }
+    hitRect.addEventListener("pointermove", onMove);
+    hitRect.addEventListener("pointerleave", onLeave);
+  }
+
+  // ---------- chart 1: raw deaths absolute ----------
+  renderLineChart("chart-raw-deaths", {
+    years: DATA.raw_annual.years,
+    series: [{ label: "Sterbefälle", color: COLOR_1, values: DATA.raw_annual.deaths }],
+    yTickFmt: function (v) { return (v / 1000).toLocaleString("de-DE", { maximumFractionDigits: 0 }) + "k"; },
+  });
+
+  // ---------- chart 2: raw rate per 1000 ----------
+  renderLineChart("chart-raw-rate", {
+    years: DATA.raw_annual.years,
+    series: [{ label: "je 1.000 Einw.", color: COLOR_1, values: DATA.raw_annual.rate_per_1000 }],
+    yTickFmt: function (v) { return fmtRate1(v); },
+  });
+
+  // ---------- chart 3: age-standardized rate ----------
+  renderLineChart("chart-asr", {
+    years: DATA.age_adjusted.years,
+    series: [{ label: "je 100.000 (ESP2013)", color: COLOR_1, values: DATA.age_adjusted.age_std_rate_per_100k }],
+    yTickFmt: function (v) { return fmtInt(v); },
+  });
+
+  // ---------- chart 4: indexed comparison ----------
+  (function () {
+    var years = DATA.age_adjusted.years;
+    var crude = DATA.age_adjusted.crude_rate_per_1000;
+    var asr = DATA.age_adjusted.age_std_rate_per_100k;
+    var crudeIdx = crude.map(function (v) { return (v / crude[0]) * 100; });
+    var asrIdx = asr.map(function (v) { return (v / asr[0]) * 100; });
+
+    var legend = document.getElementById("legend-compare");
+    [["Rohe Rate (indexiert)", COLOR_1], ["Altersstandardisiert (indexiert)", COLOR_2]].forEach(function (pair) {
+      var el = document.createElement("span");
+      el.className = "key";
+      el.innerHTML = '<span class="swatch" style="background:' + pair[1] + '"></span><span></span>';
+      el.querySelector("span:last-child").textContent = pair[0];
+      legend.appendChild(el);
+    });
+
+    renderLineChart("chart-compare", {
+      years: years,
+      series: [
+        { label: "Rohe Rate (indexiert)", color: COLOR_1, values: crudeIdx },
+        { label: "Altersstandardisiert (indexiert)", color: COLOR_2, values: asrIdx },
+      ],
+      yTickFmt: function (v) { return fmtRate1(v); },
+    });
+  })();
+
+  // ---------- diverging color scale (blue = unter Baseline, red = ueber Baseline) ----------
+  var DIVERGE_DOMAIN = 25; // % Abweichung, ab hier volle Saettigung
+  var GRAY_MID = cssVar("--gridline");
+  function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    return [parseInt(hex.substr(0, 2), 16), parseInt(hex.substr(2, 2), 16), parseInt(hex.substr(4, 2), 16)];
+  }
+  function rgbToCss(rgb) { return "rgb(" + rgb.map(Math.round).join(",") + ")"; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpRgb(rgbA, rgbB, t) { return rgbA.map(function (v, i) { return lerp(v, rgbB[i], t); }); }
+  function divergingColor(pct) {
+    var t = Math.max(-1, Math.min(1, pct / DIVERGE_DOMAIN));
+    var gray = hexToRgb(GRAY_MID.trim().startsWith("#") ? GRAY_MID.trim() : "#c3c2b7");
+    var blue = hexToRgb(COLOR_1);
+    var red = hexToRgb(cssVar("--critical"));
+    if (t < 0) return rgbToCss(lerpRgb(gray, blue, -t));
+    return rgbToCss(lerpRgb(gray, red, t));
+  }
+
+  // ---------- generische Abweichungs-Heatmap: Spalte (Monat/KW) x Jahr ----------
+  function renderDeviationHeatmap(cfg) {
+    // cfg: {svgId, legendId, years, columns (Labels), cells, cellW, cellH,
+    //       labelEvery, colPrefix (fuer Tooltip, z.B. "" oder "KW")}
+    var years = cfg.years;
+    var columns = cfg.columns;
+    var container = document.getElementById(cfg.svgId);
+    var cellW = cfg.cellW, cellH = cfg.cellH;
+    var marginLeft = 44, marginTop = 18, marginRight = 4, marginBottom = 4;
+    var width = marginLeft + columns.length * cellW + marginRight;
+    var height = marginTop + years.length * cellH + marginBottom;
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("class", "chart-svg");
+    container.style.position = "relative";
+    container.appendChild(svg);
+
+    columns.forEach(function (c, ci) {
+      if (cfg.labelEvery > 1 && ci % cfg.labelEvery !== 0) return;
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft + ci * cellW + cellW / 2);
+      t.setAttribute("y", marginTop - 6);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("class", "axis-text");
+      t.textContent = c;
+      svg.appendChild(t);
+    });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.appendChild(tooltip);
+
+    years.forEach(function (yr, yi) {
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft - 8);
+      t.setAttribute("y", marginTop + yi * cellH + cellH / 2 + 4);
+      t.setAttribute("text-anchor", "end");
+      t.setAttribute("class", "axis-text");
+      t.textContent = yr;
+      svg.appendChild(t);
+
+      cfg.cells[yi].forEach(function (cell, ci) {
+        var hasData = cell.pct_vs_baseline != null;
+        var rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", marginLeft + ci * cellW + 1);
+        rect.setAttribute("y", marginTop + yi * cellH + 1);
+        rect.setAttribute("width", cellW - 2);
+        rect.setAttribute("height", cellH - 2);
+        rect.setAttribute("rx", Math.min(3, cellW / 4));
+        rect.setAttribute("fill", hasData ? divergingColor(cell.pct_vs_baseline) : "transparent");
+        if (hasData) {
+          rect.setAttribute("stroke", cssVar("--border"));
+          rect.setAttribute("stroke-width", "1");
+        }
+        svg.appendChild(rect);
+        if (!hasData) return; // Zeitraum noch nicht verfuegbar (laufendes Jahr)
+
+        rect.addEventListener("pointermove", function (evt) {
+          var wrapRect = container.getBoundingClientRect();
+          var svgRect = svg.getBoundingClientRect();
+          var scaleX = width / svgRect.width;
+          var scaleY = height / svgRect.height;
+          var cx = (evt.clientX - svgRect.left) * scaleX;
+          var cy = (evt.clientY - svgRect.top) * scaleY;
+          tooltip.innerHTML =
+            '<div class="t-year"></div><div class="t-row"><span></span><span class="val"></span></div>' +
+            '<div class="t-row"><span></span><span class="val"></span></div>';
+          tooltip.querySelector(".t-year").textContent = columns[ci] + " " + yr;
+          var rows = tooltip.querySelectorAll(".t-row");
+          rows[0].querySelector("span:first-child").textContent = "Sterbefälle";
+          rows[0].querySelector(".val").textContent = fmtInt(cell.deaths);
+          rows[1].querySelector("span:first-child").textContent = "vs. Vorjahresschnitt";
+          rows[1].querySelector(".val").textContent = fmtPct(cell.pct_vs_baseline);
+          tooltip.style.opacity = "1";
+          var tx = (cx / width) * wrapRect.width;
+          var ty = (cy / height) * wrapRect.height;
+          var tW = tooltip.offsetWidth;
+          var left = tx + 14;
+          if (left + tW > wrapRect.width) left = tx - tW - 14;
+          tooltip.style.left = left + "px";
+          tooltip.style.top = Math.max(0, ty - 44) + "px";
+        });
+        rect.addEventListener("pointerleave", function () { tooltip.style.opacity = "0"; });
+      });
+    });
+
+    // Legende: Farbverlauf -25% .. 0 .. +25%
+    var legend = document.getElementById(cfg.legendId);
+    var grad = document.createElement("div");
+    grad.className = "bar";
+    grad.style.background =
+      "linear-gradient(to right, " + divergingColor(-DIVERGE_DOMAIN) + ", " + divergingColor(0) + ", " + divergingColor(DIVERGE_DOMAIN) + ")";
+    var lo = document.createElement("span"); lo.textContent = "≤ −" + DIVERGE_DOMAIN + "% (weniger als üblich)";
+    var hi = document.createElement("span"); hi.textContent = "≥ +" + DIVERGE_DOMAIN + "% (mehr als üblich)";
+    legend.appendChild(lo); legend.appendChild(grad); legend.appendChild(hi);
+
+    // Tabellen-Fallback, gleiches Jahr-x-Spalte-Layout wie die Heatmap
+    renderTable(cfg.tableId, [
+      { label: "Jahr", values: years },
+    ].concat(columns.map(function (c, ci) {
+      return { label: c, values: years.map(function (yr, yi) { return cfg.cells[yi][ci].pct_vs_baseline; }), fmt: fmtPct };
+    })));
+  }
+
+  (function renderMonthlyHeatmap() {
+    var M = DATA.monthly;
+    document.getElementById("monthly-year-span").textContent = M.years[0] + "–" + M.years[M.years.length - 1];
+    document.getElementById("heatmap-source").textContent = "Quelle: " + M.source;
+    renderDeviationHeatmap({
+      svgId: "chart-heatmap", legendId: "heatmap-legend", tableId: "table-heatmap",
+      years: M.years, columns: M.months, cells: M.cells,
+      cellW: 54, cellH: 20, labelEvery: 1,
+    });
+  })();
+
+  // ---------- sequentielle Farbskala (1 Farbton, hell -> dunkel) fuer Absolutwerte ----------
+  function sequentialColor(value, min, max) {
+    var t = max > min ? (value - min) / (max - min) : 0;
+    t = Math.max(0, Math.min(1, t));
+    var light = hexToRgb("#cde2fb");
+    var dark = hexToRgb("#0d366b");
+    return rgbToCss(lerpRgb(light, dark, t));
+  }
+
+  function renderSequentialHeatmap(cfg) {
+    // cfg: {svgId, legendId, tableId, years, columns, cells (Array<Array<{asr}>>), cellW, cellH, labelEvery}
+    var years = cfg.years;
+    var columns = cfg.columns;
+    var vals = [];
+    cfg.cells.forEach(function (row) { row.forEach(function (c) { if (c.asr != null) vals.push(c.asr); }); });
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+
+    var container = document.getElementById(cfg.svgId);
+    var cellW = cfg.cellW, cellH = cfg.cellH;
+    var marginLeft = 44, marginTop = 18, marginRight = 4, marginBottom = 4;
+    var width = marginLeft + columns.length * cellW + marginRight;
+    var height = marginTop + years.length * cellH + marginBottom;
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("class", "chart-svg");
+    container.style.position = "relative";
+    container.appendChild(svg);
+
+    columns.forEach(function (c, ci) {
+      if (cfg.labelEvery > 1 && ci % cfg.labelEvery !== 0) return;
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft + ci * cellW + cellW / 2);
+      t.setAttribute("y", marginTop - 6);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("class", "axis-text");
+      t.textContent = c;
+      svg.appendChild(t);
+    });
+
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.appendChild(tooltip);
+
+    years.forEach(function (yr, yi) {
+      var t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", marginLeft - 8);
+      t.setAttribute("y", marginTop + yi * cellH + cellH / 2 + 4);
+      t.setAttribute("text-anchor", "end");
+      t.setAttribute("class", "axis-text");
+      t.textContent = yr;
+      svg.appendChild(t);
+
+      cfg.cells[yi].forEach(function (cell, ci) {
+        var hasData = cell.asr != null;
+        var rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", marginLeft + ci * cellW + 1);
+        rect.setAttribute("y", marginTop + yi * cellH + 1);
+        rect.setAttribute("width", cellW - 2);
+        rect.setAttribute("height", cellH - 2);
+        rect.setAttribute("rx", Math.min(3, cellW / 4));
+        rect.setAttribute("fill", hasData ? sequentialColor(cell.asr, min, max) : "transparent");
+        if (hasData) {
+          rect.setAttribute("stroke", cssVar("--border"));
+          rect.setAttribute("stroke-width", "1");
+        }
+        svg.appendChild(rect);
+        if (!hasData) return;
+
+        rect.addEventListener("pointermove", function (evt) {
+          var wrapRect = container.getBoundingClientRect();
+          var svgRect = svg.getBoundingClientRect();
+          var scaleX = width / svgRect.width;
+          var scaleY = height / svgRect.height;
+          var cx = (evt.clientX - svgRect.left) * scaleX;
+          var cy = (evt.clientY - svgRect.top) * scaleY;
+          tooltip.innerHTML =
+            '<div class="t-year"></div><div class="t-row"><span></span><span class="val"></span></div>';
+          tooltip.querySelector(".t-year").textContent = columns[ci] + " " + yr;
+          var row = tooltip.querySelector(".t-row");
+          row.querySelector("span:first-child").textContent = "Rate je 100.000";
+          row.querySelector(".val").textContent = fmtRate1(cell.asr);
+          tooltip.style.opacity = "1";
+          var tx = (cx / width) * wrapRect.width;
+          var ty = (cy / height) * wrapRect.height;
+          var tW = tooltip.offsetWidth;
+          var left = tx + 14;
+          if (left + tW > wrapRect.width) left = tx - tW - 14;
+          tooltip.style.left = left + "px";
+          tooltip.style.top = Math.max(0, ty - 44) + "px";
+        });
+        rect.addEventListener("pointerleave", function () { tooltip.style.opacity = "0"; });
+      });
+    });
+
+    var legend = document.getElementById(cfg.legendId);
+    var grad = document.createElement("div");
+    grad.className = "bar";
+    grad.style.background = "linear-gradient(to right, " + sequentialColor(min, min, max) + ", " + sequentialColor(max, min, max) + ")";
+    var lo = document.createElement("span"); lo.textContent = fmtRate1(min) + " je 100.000";
+    var hi = document.createElement("span"); hi.textContent = fmtRate1(max) + " je 100.000";
+    legend.appendChild(lo); legend.appendChild(grad); legend.appendChild(hi);
+
+    renderTable(cfg.tableId, [
+      { label: "Jahr", values: years },
+    ].concat(columns.map(function (c, ci) {
+      return { label: c, values: years.map(function (yr, yi) { return cfg.cells[yi][ci].asr; }), fmt: fmtRate1 };
+    })));
+  }
+
+  (function renderWeeklyHeatmapController() {
+    var W = DATA.monthly.weekly;
+    var WA = DATA.weekly_age_adjusted;
+    var kwLabelsRaw = [];
+    for (var i = 1; i <= W.max_kw; i++) kwLabelsRaw.push("KW" + i);
+    var kwLabelsAge = [];
+    for (var j = 1; j <= WA.max_kw; j++) kwLabelsAge.push("KW" + j);
+
+    var metricRow = document.getElementById("heatmap-week-metric-buttons");
+    var METRICS = [
+      { key: "raw", label: "Rohdaten (2000–2026)" },
+      { key: "age", label: "Altersstandardisiert (2021–2026)" },
+    ];
+    var state = { metric: "raw" };
+
+    function makeBtn(label, onClick) {
+      var b = document.createElement("button");
+      b.className = "period-btn";
+      b.type = "button";
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    }
+    var metricBtns = METRICS.map(function (mt) {
+      var b = makeBtn(mt.label, function () { state.metric = mt.key; update(); });
+      metricRow.appendChild(b);
+      return b;
+    });
+
+    function update() {
+      metricBtns.forEach(function (b, i) { b.classList.toggle("active", METRICS[i].key === state.metric); });
+      document.getElementById("chart-heatmap-week").innerHTML = "";
+      document.getElementById("heatmap-week-legend").innerHTML = "";
+
+      if (state.metric === "raw") {
+        document.getElementById("heatmap-week-title").textContent = "Abweichung vom Vorjahres-Durchschnitt, je Kalenderwoche und Jahr";
+        document.getElementById("heatmap-week-source").textContent =
+          "Quelle: Eurostat demo_r_mwk_ts (2000–2020) + Destatis-Sonderauswertung (ab 2021), Gestorbene je ISO-Woche, Deutschland. Baseline je Zelle = Mittelwert derselben Kalenderwoche in den bis zu 5 vorangehenden Jahren (gleitend, min. 3 Vorjahre). Letzte 1–2 Wochen vorläufig.";
+        renderDeviationHeatmap({
+          svgId: "chart-heatmap-week", legendId: "heatmap-week-legend", tableId: "table-weekly",
+          years: W.years, columns: kwLabelsRaw, cells: W.cells,
+          cellW: 16, cellH: 20, labelEvery: 4,
+        });
+      } else {
+        document.getElementById("heatmap-week-title").textContent = "Altersstandardisierte Rate (ESP2013, annualisiert), je Kalenderwoche und Jahr";
+        document.getElementById("heatmap-week-source").textContent = "Quelle: " + WA.source;
+        renderSequentialHeatmap({
+          svgId: "chart-heatmap-week", legendId: "heatmap-week-legend", tableId: "table-weekly",
+          years: WA.years, columns: kwLabelsAge, cells: WA.cells,
+          cellW: 16, cellH: 20, labelEvery: 4,
+        });
+      }
+    }
+
+    update();
+  })();
+
+  // ---------- Saison-/Monatswahl -> Liniendiagramm ----------
+  (function renderSeasonPicker() {
+    var M = DATA.monthly;
+    var MA = DATA.monthly_age_adjusted;
+    var monthNames = M.months;
+    var monthlyDeaths = M.monthly_deaths; // { "2000": [Jan..Dez oder null], ... }
+    var monthlyAsr = MA.age_std_rate_per_100k_annualized; // { "2021": [Jan..Dez oder null], ... }
+    var allYears = Object.keys(monthlyDeaths).map(Number).sort(function (a, b) { return a - b; });
+    var asrYears = Object.keys(monthlyAsr).map(Number).sort(function (a, b) { return a - b; });
+
+    var SEASONS = [
+      { key: "winter", label: "Winter (Dez–Feb)", months: [12, 1, 2], wraps: true },
+      { key: "spring", label: "Frühling (Mär–Mai)", months: [3, 4, 5], wraps: false },
+      { key: "summer", label: "Sommer (Jun–Aug)", months: [6, 7, 8], wraps: false },
+      { key: "autumn", label: "Herbst (Sep–Nov)", months: [9, 10, 11], wraps: false },
+    ];
+
+    var state = { metric: "raw", mode: "season", seasonKey: "summer", month: 7 };
+
+    function rawWindowSeries(monthsList, wraps) {
+      var out = { years: [], values: [] };
+      allYears.forEach(function (y) {
+        var sum = 0, ok = true;
+        monthsList.forEach(function (m) {
+          var yy = wraps && m === 12 ? y - 1 : y; // Basisjahr y = Jahr des letzten Fenstermonats (Feb)
+          var arr = monthlyDeaths[String(yy)];
+          if (!arr || arr[m - 1] == null) { ok = false; return; }
+          sum += arr[m - 1];
+        });
+        if (ok) { out.years.push(y); out.values.push(sum); }
+      });
+      return out;
+    }
+
+    // ASR ist eine Rate, keine Menge -> ueber das Fenster mitteln statt summieren.
+    function asrWindowSeries(monthsList, wraps) {
+      var out = { years: [], values: [] };
+      asrYears.forEach(function (y) {
+        var vals = [], ok = true;
+        monthsList.forEach(function (m) {
+          var yy = wraps && m === 12 ? y - 1 : y;
+          var arr = monthlyAsr[String(yy)];
+          if (!arr || arr[m - 1] == null) { ok = false; return; }
+          vals.push(arr[m - 1]);
+        });
+        if (ok) {
+          var mean = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+          out.years.push(y); out.values.push(Math.round(mean * 10) / 10);
+        }
+      });
+      return out;
+    }
+
+    function currentSeries() {
+      var isAge = state.metric === "age";
+      if (state.mode === "month") {
+        var out = { years: [], values: [] };
+        var src = isAge ? monthlyAsr : monthlyDeaths;
+        var years = isAge ? asrYears : allYears;
+        years.forEach(function (y) {
+          var arr = src[String(y)];
+          if (arr && arr[state.month - 1] != null) { out.years.push(y); out.values.push(arr[state.month - 1]); }
+        });
+        return { series: out, title: monthNames[state.month - 1] };
+      }
+      var season = SEASONS.filter(function (s) { return s.key === state.seasonKey; })[0];
+      var series = isAge ? asrWindowSeries(season.months, season.wraps) : rawWindowSeries(season.months, season.wraps);
+      return { series: series, title: season.label };
+    }
+
+    var metricRow = document.getElementById("metric-buttons");
+    var seasonRow = document.getElementById("season-buttons");
+    var monthRow = document.getElementById("month-buttons");
+
+    function makeBtn(label, onClick) {
+      var b = document.createElement("button");
+      b.className = "period-btn";
+      b.type = "button";
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    var METRICS = [
+      { key: "raw", label: "Rohdaten (2000–2026)" },
+      { key: "age", label: "Altersstandardisiert (2021–2026)" },
+    ];
+    var metricBtns = METRICS.map(function (mt) {
+      var b = makeBtn(mt.label, function () {
+        state.metric = mt.key;
+        updateButtons(); renderSeasonChart();
+      });
+      metricRow.appendChild(b);
+      return b;
+    });
+
+    var seasonBtns = SEASONS.map(function (s) {
+      var b = makeBtn(s.label, function () {
+        state.mode = "season"; state.seasonKey = s.key;
+        updateButtons(); renderSeasonChart();
+      });
+      seasonRow.appendChild(b);
+      return b;
+    });
+    var monthBtns = monthNames.map(function (name, i) {
+      var b = makeBtn(name, function () {
+        state.mode = "month"; state.month = i + 1;
+        updateButtons(); renderSeasonChart();
+      });
+      monthRow.appendChild(b);
+      return b;
+    });
+
+    function updateButtons() {
+      metricBtns.forEach(function (b, i) { b.classList.toggle("active", METRICS[i].key === state.metric); });
+      seasonBtns.forEach(function (b, i) {
+        b.classList.toggle("active", state.mode === "season" && SEASONS[i].key === state.seasonKey);
+      });
+      monthBtns.forEach(function (b, i) {
+        b.classList.toggle("active", state.mode === "month" && state.month === i + 1);
+      });
+    }
+
+    function renderSeasonChart() {
+      var current = currentSeries();
+      var isAge = state.metric === "age";
+      var container = document.getElementById("chart-season");
+      container.innerHTML = "";
+      var metricLabel = isAge ? "Altersstandardisierte Rate (je 100.000, annualisiert)" : "Sterbefälle";
+      document.getElementById("season-chart-title").textContent = metricLabel + " im gewählten Zeitraum, je Jahr — " + current.title;
+      document.getElementById("season-chart-source").textContent = "Quelle: " + (isAge ? MA.source : "Eurostat demo_r_mwk_ts (2000–2020) + Destatis-Sonderauswertung (ab 2021, aktuellster Stand), taggenau zu Kalendermonaten aggregiert. Letzte 1–2 Wochen vorläufig.");
+      renderLineChart("chart-season", {
+        years: current.series.years,
+        series: [{ label: current.title, color: COLOR_1, values: current.series.values }],
+        yTickFmt: isAge ? function (v) { return fmtRate1(v); } : function (v) { return fmtInt(v); },
+      });
+    }
+
+    updateButtons();
+    renderSeasonChart();
+  })();
+
+  // ---------- tables ----------
+  function renderTable(containerId, cols) {
+    var container = document.getElementById(containerId);
+    var table = document.createElement("table");
+    table.className = "data-table";
+    var thead = "<thead><tr>" + cols.map(function (c) { return "<th></th>"; }).join("") + "</tr></thead>";
+    table.innerHTML = thead;
+    var headCells = table.querySelectorAll("th");
+    cols.forEach(function (c, i) { headCells[i].textContent = c.label; });
+    var tbody = document.createElement("tbody");
+    var n = cols[0].values.length;
+    for (var r = 0; r < n; r++) {
+      var tr = document.createElement("tr");
+      cols.forEach(function (c) {
+        var td = document.createElement("td");
+        td.textContent = c.fmt ? c.fmt(c.values[r]) : c.values[r];
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  renderTable("table-raw", [
+    { label: "Jahr", values: DATA.raw_annual.years },
+    { label: "Sterbefälle", values: DATA.raw_annual.deaths, fmt: fmtInt },
+    { label: "je 1.000 Einw.", values: DATA.raw_annual.rate_per_1000, fmt: fmtRate1 },
+  ]);
+
+  renderTable("table-age", [
+    { label: "Jahr", values: DATA.age_adjusted.years },
+    { label: "Sterbefälle", values: DATA.age_adjusted.deaths, fmt: fmtInt },
+    { label: "je 1.000 (roh)", values: DATA.age_adjusted.crude_rate_per_1000, fmt: fmtRate1 },
+    { label: "je 100.000 (ESP2013)", values: DATA.age_adjusted.age_std_rate_per_100k, fmt: fmtRate1 },
+    { label: "vs. Ø 2015–19", values: DATA.age_adjusted.pct_vs_baseline, fmt: fmtPct },
+  ]);
+})();
+</script>
+</body>
+</html>
