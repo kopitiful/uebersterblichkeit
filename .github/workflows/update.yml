@@ -2,9 +2,10 @@ name: Update dashboard
 
 on:
   schedule:
-    # Dienstags 09:00 UTC (11:00 CEST / 10:00 CET) - Destatis aktualisiert
-    # die Sonderauswertung ueblicherweise dienstags.
-    - cron: "0 9 * * 2"
+    # Mittwochs 09:00 UTC (11:00 CEST / 10:00 CET) - Destatis aktualisiert
+    # die Sonderauswertung dienstags, ein Tag Puffer falls die Veroeffentlichung
+    # spaeter am Tag erfolgt.
+    - cron: "0 9 * * 3"
   workflow_dispatch: {}
 
 permissions:
