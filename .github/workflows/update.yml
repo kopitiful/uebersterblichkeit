@@ -2,10 +2,11 @@ name: Update dashboard
 
 on:
   schedule:
-    # Mittwochs 09:00 UTC (11:00 CEST / 10:00 CET) - Destatis aktualisiert
-    # die Sonderauswertung dienstags, ein Tag Puffer falls die Veroeffentlichung
-    # spaeter am Tag erfolgt.
-    - cron: "0 9 * * 3"
+    # Taeglich 09:00 UTC. Die Destatis-Sonderauswertung "Sterbefaelle nach
+    # Tagen, Wochen und Monaten" wird unregelmaessig mehrmals woechentlich
+    # aktualisiert (nicht an einem festen Wochentag), daher taeglicher Check.
+    # Bei unveraenderten Daten erzeugt der Workflow ohnehin keinen Commit.
+    - cron: "0 9 * * *"
   workflow_dispatch: {}
 
 permissions:
